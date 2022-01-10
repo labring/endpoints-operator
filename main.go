@@ -21,11 +21,11 @@ import (
 	"github.com/cuisongliu/endpoints-balance/library/version"
 	"github.com/emicklei/go-restful"
 	"github.com/go-logr/logr"
+	"k8s.io/klog"
+	"k8s.io/klog/klogr"
 	"net/http"
 	"os"
-
-	level "go.uber.org/zap"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	"strings"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -34,6 +34,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	"github.com/cuisongliu/endpoints-balance/controllers"
+	cliflag "k8s.io/component-base/cli/flag"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -50,24 +51,26 @@ func init() {
 }
 
 func main() {
-	var metricsAddr, healthAddr, versionAddr, logLevel string
+	var metricsAddr, healthAddr, versionAddr string
 	var enableLeaderElection bool
-	var webhookPort int
 	//var syncPeriod int64
-	flag.IntVar(&webhookPort, "webhook-port", 9443, "The port of the webhook.")
 	flag.StringVar(&metricsAddr, "metrics-addr", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&healthAddr, "health-addr", ":9090", "Health address. Readiness url is  /readyz, Liveness url is /healthz")
 	flag.StringVar(&versionAddr, "version-addr", ":7070", "The address the version endpoint binds to. /version")
-	flag.StringVar(&logLevel, "log-level", "info", "log level: debug,info,warn,error,dpanic,panic,fatal")
 	flag.BoolVar(&enableLeaderElection, "enable-leader-election", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
-	flag.Parse()
 
-	l := level.NewAtomicLevel()
-	_ = l.UnmarshalText([]byte(logLevel))
-	optsl := zap.Level(&l)
-	ctrl.SetLogger(zap.New(zap.UseDevMode(true), optsl))
+	fss := cliflag.NamedFlagSets{}
+	kfs := fss.FlagSet("klog")
+	local := flag.NewFlagSet("klog", flag.ExitOnError)
+	klog.InitFlags(local)
+	local.VisitAll(func(fl *flag.Flag) {
+		fl.Name = strings.Replace(fl.Name, "_", "-", -1)
+		kfs.AddGoFlag(fl)
+	})
+	flag.Parse()
+	ctrl.SetLogger(klogr.New())
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
