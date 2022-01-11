@@ -26,7 +26,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
-	cruntimecontrl "sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"strings"
@@ -85,7 +84,7 @@ func (c *ServiceReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 	c.cache = mgr.GetCache()
 	c.Logger.V(4).Info("init reconcile controller service")
-	return ctrl.NewControllerManagedBy(mgr).WithOptions(cruntimecontrl.Options{MaxConcurrentReconciles: 1}).
+	return ctrl.NewControllerManagedBy(mgr).
 		For(&corev1.Service{}).WithEventFilter(predicate.Funcs{
 		CreateFunc: func(event event.CreateEvent) bool {
 			return c.processService(event.Meta)
