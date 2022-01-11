@@ -15,4 +15,4 @@
 # vendor/
 bin
 .idea
-.dist
+dist
