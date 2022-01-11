@@ -5,6 +5,7 @@ before:
     # you may remove this if you don't need go generate
     - go generate ./...
 builds:
+  - main: ./cmd
   - env:
       - CGO_ENABLED=0
     goos:
@@ -13,7 +14,10 @@ builds:
       - amd64
       - arm64
     ldflags:
-      - -s -w -X github.com/cuisongliu/endpoints-balance/library/version.GitVersion={{.Version}} -X github.com/cuisongliu/endpoints-balance/library/version.GitCommit={{.ShortCommit}} -X github.com/cuisongliu/endpoints-balance/library/version.BuildDate={{.Date}}
+      - -s -w
+      - -X github.com/cuisongliu/endpoints-balance/library/version.GitVersion={{.Version}}
+      - -X github.com/cuisongliu/endpoints-balance/library/version.GitCommit={{.ShortCommit}}
+      - -X github.com/cuisongliu/endpoints-balance/library/version.BuildDate={{.Date}}
 
 checksum:
   name_template: 'checksums.txt'

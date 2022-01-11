@@ -49,5 +49,5 @@ func GetLoggerOrDie(ctx context.Context, valKey string) logr.Logger {
 }
 
 func FinalizerName(module, kind string) string {
-	return fmt.Sprintf("%s.infra.troila.com/%s.finalizers", module, kind)
+	return fmt.Sprintf("%s.sealyun.com/%s.finalizers", module, kind)
 }
