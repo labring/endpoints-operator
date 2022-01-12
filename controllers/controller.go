@@ -192,7 +192,9 @@ func (c *Reconciler) syncEndpoint(ctx context.Context, cep *v1beta1.ClusterEndpo
 					Addresses: hosts,
 					Ports:     convertPorts(cep.Spec.Ports),
 				}
+
 				ep.Subsets = append(ep.Subsets, es)
+
 			}
 			return nil
 		})
@@ -210,6 +212,16 @@ func (c *Reconciler) syncEndpoint(ctx context.Context, cep *v1beta1.ClusterEndpo
 		c.updateCondition(cep, endpointCondition)
 	}
 }
+
+//func healthyCheck(epc *v1beta1.ClusterEndpoint) error {
+//	for _, h := range epc.Spec.Hosts {
+//		//host to probe
+//		for _, p := range epc.Spec.Ports {
+//			proberCheck.runProbe()
+//		}
+//
+//	}
+//}
 func (c *Reconciler) updateStatus(ctx context.Context, nn types.NamespacedName, status *v1beta1.ClusterEndpointStatus) error {
 	if err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		original := &v1beta1.ClusterEndpoint{}

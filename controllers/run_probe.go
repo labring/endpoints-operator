@@ -40,6 +40,8 @@ type prober struct {
 	tcp  tcpprobe.Prober
 }
 
+var proberCheck = newProber()
+
 // NewProber creates a Prober, it takes a command runner and
 // several container info managers.
 func newProber() *prober {
