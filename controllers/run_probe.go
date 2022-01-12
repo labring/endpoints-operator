@@ -51,6 +51,7 @@ func newProber() *prober {
 		tcp:  tcpprobe.New(),
 	}
 }
+
 func (pb *prober) runProbe(p *v1.Probe) (probe.Result, string, error) {
 	timeout := time.Duration(p.TimeoutSeconds) * time.Second
 	if p.Exec != nil {

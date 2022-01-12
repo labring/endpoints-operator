@@ -101,7 +101,7 @@ func run(s *options.Options, stopCh <-chan struct{}) error {
 	}
 
 	controllers.Install(scheme)
-	clusterReconciler := &controllers.ServiceReconciler{}
+	clusterReconciler := &controllers.Reconciler{}
 
 	if err = clusterReconciler.SetupWithManager(mgr); err != nil {
 		klog.Fatal("Unable to create cluster controller ", err)

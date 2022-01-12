@@ -1,11 +1,11 @@
 /*
-Copyright 2022 cuisongliu@qq.com.
+Copyright 2020 KubeSphere Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+     http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,11 +19,24 @@ package controllers
 import (
 	"github.com/sealyun/endpoints-operator/api/network/v1beta1"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	k8sruntime "k8s.io/apimachinery/pkg/util/runtime"
 )
 
-func Install(scheme *runtime.Scheme) {
-	k8sruntime.Must(v1.AddToScheme(scheme))
-	k8sruntime.Must(v1beta1.Install(scheme))
+func isConditionTrue(ce *v1beta1.ClusterEndpoint, conditionType v1beta1.ConditionType) bool {
+	for _, condition := range ce.Status.Conditions {
+		if condition.Type == conditionType && condition.Status == v1.ConditionTrue {
+			return true
+		}
+	}
+	return false
+}
+func isConditionsTrue(ce *v1beta1.ClusterEndpoint) bool {
+	if len(ce.Status.Conditions) == 0 {
+		return false
+	}
+	for _, condition := range ce.Status.Conditions {
+		if condition.Status != v1.ConditionTrue {
+			return false
+		}
+	}
+	return true
 }
