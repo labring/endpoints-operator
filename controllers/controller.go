@@ -18,10 +18,14 @@ package controllers
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"github.com/go-logr/logr"
 	"github.com/sealyun/endpoints-operator/api/network/v1beta1"
 	"github.com/sealyun/endpoints-operator/library/controller"
 	"github.com/sealyun/endpoints-operator/library/convert"
+	"github.com/sealyun/endpoints-operator/library/probe"
+	"golang.org/x/sync/errgroup"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -37,6 +41,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
+	"strings"
 	"time"
 )
 
@@ -127,6 +132,9 @@ func (c *Reconciler) UpdateStatus(ctx context.Context, req ctrl.Request, cep *v1
 		c.Recorder.Eventf(cep, corev1.EventTypeWarning, "SyncStatus", "Sync status %s is error: %v", cep.Name, err)
 	}
 	sec := time.Duration(cep.Spec.PeriodSeconds) * time.Second
+	if cep.Spec.PeriodSeconds == 0 {
+		return ctrl.Result{}, nil
+	}
 	return ctrl.Result{RequeueAfter: sec}, nil
 }
 
@@ -186,15 +194,25 @@ func (c *Reconciler) syncEndpoint(ctx context.Context, cep *v1beta1.ClusterEndpo
 		_, err := controllerutil.CreateOrUpdate(ctx, c.Client, ep, func() error {
 			ep.Labels = map[string]string{}
 			ep.Subsets = make([]corev1.EndpointSubset, 0)
-			hosts := convertAddress(cep.Spec.Hosts)
+			healthyHosts := make([]string, 0)
+			e := make([]string, 0)
+			for _, h := range cep.Spec.Hosts {
+				if err := healthyCheck(ctx, h, cep); err == nil {
+					healthyHosts = append(healthyHosts, h)
+				} else {
+					e = append(e, fmt.Sprintf("host: %s heathy is unhealthy: %v ", h, err.Error()))
+				}
+			}
+			hosts := convertAddress(healthyHosts)
 			if len(hosts) != 0 {
 				es := corev1.EndpointSubset{
 					Addresses: hosts,
 					Ports:     convertPorts(cep.Spec.Ports),
 				}
-
 				ep.Subsets = append(ep.Subsets, es)
-
+			}
+			if len(e) != 0 {
+				return fmt.Errorf(strings.Join(e, ";;"))
 			}
 			return nil
 		})
@@ -213,15 +231,45 @@ func (c *Reconciler) syncEndpoint(ctx context.Context, cep *v1beta1.ClusterEndpo
 	}
 }
 
-//func healthyCheck(epc *v1beta1.ClusterEndpoint) error {
-//	for _, h := range epc.Spec.Hosts {
-//		//host to probe
-//		for _, p := range epc.Spec.Ports {
-//			proberCheck.runProbe()
-//		}
-//
-//	}
-//}
+func healthyCheck(ctx context.Context, host string, cep *v1beta1.ClusterEndpoint) error {
+	pg, _ := errgroup.WithContext(ctx)
+	for _, p := range cep.Spec.Ports {
+		pg.Go(func() error {
+			if cep.Spec.TimeoutSeconds == 0 {
+				cep.Spec.TimeoutSeconds = 1
+			}
+			pro := &corev1.Probe{
+				TimeoutSeconds: cep.Spec.TimeoutSeconds,
+			}
+			if p.HTTPGet != nil {
+				pro.HTTPGet = &corev1.HTTPGetAction{
+					Path:        p.HTTPGet.Path,
+					Port:        intstr.FromInt(int(p.TargetPort)),
+					Host:        host,
+					Scheme:      p.HTTPGet.Scheme,
+					HTTPHeaders: p.HTTPGet.HTTPHeaders,
+				}
+			}
+			if p.TCPSocket != nil && p.TCPSocket.Enable {
+				pro.TCPSocket = &corev1.TCPSocketAction{
+					Port: intstr.FromInt(int(p.TargetPort)),
+					Host: host,
+				}
+			}
+			result, output, err := proberCheck.runProbe(pro)
+			if err != nil || (result != probe.Success && result != probe.Warning) {
+				// Probe failed in one way or another.
+				if err != nil {
+					return err
+				} else { // result != probe.Success
+					return errors.New(output)
+				}
+			}
+			return nil
+		})
+	}
+	return pg.Wait()
+}
 func (c *Reconciler) updateStatus(ctx context.Context, nn types.NamespacedName, status *v1beta1.ClusterEndpointStatus) error {
 	if err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		original := &v1beta1.ClusterEndpoint{}

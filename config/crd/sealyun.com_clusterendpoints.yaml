@@ -1,17 +1,3 @@
-# Copyright © 2022 sealyun.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 
 ---
 apiVersion: apiextensions.k8s.io/v1
@@ -76,6 +62,35 @@ spec:
                 items:
                   description: ServicePort contains information on service's port.
                   properties:
+                    httpGet:
+                      description: HTTPGet specifies the http request to perform.
+                      properties:
+                        httpHeaders:
+                          description: Custom headers to set in the request. HTTP
+                            allows repeated headers.
+                          items:
+                            description: HTTPHeader describes a custom header to be
+                              used in HTTP probes
+                            properties:
+                              name:
+                                description: The header field name
+                                type: string
+                              value:
+                                description: The header field value
+                                type: string
+                            required:
+                            - name
+                            - value
+                            type: object
+                          type: array
+                        path:
+                          description: Path to access on the HTTP server.
+                          type: string
+                        scheme:
+                          description: Scheme to use for connecting to the host. Defaults
+                            to HTTP.
+                          type: string
+                      type: object
                     name:
                       description: The name of this port within the service. This
                         must be a DNS_LABEL. All ports within a ServiceSpec must have
@@ -100,100 +115,26 @@ spec:
                         is used (an identity map).
                       format: int32
                       type: integer
-                  required:
-                  - port
-                  - targetPort
-                  type: object
-                type: array
-              probes:
-                items:
-                  description: 'Handler defines a specific action that should be taken
-                    TODO: pass structured data to these actions, and document that
-                    data here.'
-                  properties:
-                    exec:
-                      description: One and only one of the following should be specified.
-                        Exec specifies the action to take.
-                      properties:
-                        command:
-                          description: Command is the command line to execute inside
-                            the container, the working directory for the command  is
-                            root ('/') in the container's filesystem. The command
-                            is simply exec'd, it is not run inside a shell, so traditional
-                            shell instructions ('|', etc) won't work. To use a shell,
-                            you need to explicitly call out to that shell. Exit status
-                            of 0 is treated as live/healthy and non-zero is unhealthy.
-                          items:
-                            type: string
-                          type: array
-                      type: object
-                    httpGet:
-                      description: HTTPGet specifies the http request to perform.
-                      properties:
-                        host:
-                          description: Host name to connect to, defaults to the pod
-                            IP. You probably want to set "Host" in httpHeaders instead.
-                          type: string
-                        httpHeaders:
-                          description: Custom headers to set in the request. HTTP
-                            allows repeated headers.
-                          items:
-                            description: HTTPHeader describes a custom header to be
-                              used in HTTP probes
-                            properties:
-                              name:
-                                description: The header field name
-                                type: string
-                              value:
-                                description: The header field value
-                                type: string
-                            required:
-                            - name
-                            - value
-                            type: object
-                          type: array
-                        path:
-                          description: Path to access on the HTTP server.
-                          type: string
-                        port:
-                          anyOf:
-                          - type: integer
-                          - type: string
-                          description: Name or number of the port to access on the
-                            container. Number must be in the range 1 to 65535. Name
-                            must be an IANA_SVC_NAME.
-                          x-kubernetes-int-or-string: true
-                        scheme:
-                          description: Scheme to use for connecting to the host. Defaults
-                            to HTTP.
-                          type: string
-                      required:
-                      - port
-                      type: object
                     tcpSocket:
                       description: 'TCPSocket specifies an action involving a TCP
                         port. TCP hooks not yet supported TODO: implement a realistic
                         TCP lifecycle hook'
                       properties:
-                        host:
-                          description: 'Optional: Host name to connect to, defaults
-                            to the pod IP.'
-                          type: string
-                        port:
-                          anyOf:
-                          - type: integer
-                          - type: string
-                          description: Number or name of the port to access on the
-                            container. Number must be in the range 1 to 65535. Name
-                            must be an IANA_SVC_NAME.
-                          x-kubernetes-int-or-string: true
+                        enable:
+                          type: boolean
                       required:
-                      - port
+                      - enable
                       type: object
+                  required:
+                  - port
+                  - targetPort
                   type: object
                 type: array
-            required:
-            - clusterIP
+              timeoutSeconds:
+                description: 'Number of seconds after which the probe times out. Defaults
+                  to 1 second. Minimum value is 1. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes'
+                format: int32
+                type: integer
             type: object
           status:
             description: ClusterEndpointStatus defines the observed state of ClusterEndpoint
