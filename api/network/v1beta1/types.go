@@ -115,7 +115,6 @@ const (
 type ConditionType string
 
 const (
-	ProbesReady       ConditionType = "ProbesReady"
 	SyncServiceReady  ConditionType = "SyncServiceReady"
 	SyncEndpointReady ConditionType = "SyncEndpointReady"
 	Initialized       ConditionType = "Initialized"
