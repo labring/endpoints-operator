@@ -17,8 +17,6 @@ limitations under the License.
 package controllers
 
 const (
-	annotationServer   = "sealyun.com/server"
-	annotationType     = "sealyun.com/type"
-	annotationHTTP     = "sealyun.com/type.http" //port=6443,schema=https:,path=/healthz&&
-	annotationInterval = "sealyun.com/interval"
+	annotationServer = "sealyun.com/server"
+	annotationHTTP   = "sealyun.com/http" //interval=5s,port=6443,schema=https:,path=/healthz
 )

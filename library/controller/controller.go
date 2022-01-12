@@ -17,9 +17,9 @@ package controller
 import (
 	"context"
 	"fmt"
-	"github.com/cuisongliu/endpoints-balance/library/convert"
-	"github.com/cuisongliu/endpoints-balance/library/tools"
 	"github.com/go-logr/logr"
+	"github.com/sealyun/endpoints-operator/library/convert"
+	"github.com/sealyun/endpoints-operator/library/tools"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"

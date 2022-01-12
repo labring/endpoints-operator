@@ -34,7 +34,7 @@ install-goreleaser: ## check license if not exist install go-lint tools
 
 build: SHELL:=/bin/bash
 build: install-goreleaser clean ## build binaries by default
-	@echo "build endpoints-balance bin"
+	@echo "build endpoints-operator bin"
 	$(GORELEASER_BIN) build --snapshot --rm-dist  --timeout=1h
 
 help: ## this help
@@ -51,6 +51,6 @@ filelicense:
 filelicense: install-addlicense
 	for file in ${Dirs} ; do \
 		if [[  $$file != '_output' && $$file != 'docs' && $$file != 'vendor' && $$file != 'logger' && $$file != 'applications' ]]; then \
-			$(ADDLICENSE_BIN)  -y $(shell date +"%Y") -c "cuisongliu@qq.com." -f hack/LICENSE ./$$file ; \
+			$(ADDLICENSE_BIN)  -y $(shell date +"%Y") -c "sealyun." -f hack/LICENSE ./$$file ; \
 		fi \
     done

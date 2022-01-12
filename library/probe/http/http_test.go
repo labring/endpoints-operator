@@ -19,7 +19,7 @@ package http
 import (
 	"bytes"
 	"fmt"
-	"github.com/cuisongliu/endpoints-balance/library/probe"
+	"github.com/sealyun/endpoints-operator/library/probe"
 	"net"
 	"net/http"
 	"net/http/httptest"

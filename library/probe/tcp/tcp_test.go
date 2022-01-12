@@ -17,7 +17,7 @@ limitations under the License.
 package tcp
 
 import (
-	"github.com/cuisongliu/endpoints-balance/library/probe"
+	"github.com/sealyun/endpoints-operator/library/probe"
 	"net"
 	"net/http"
 	"net/http/httptest"

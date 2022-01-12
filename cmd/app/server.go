@@ -16,12 +16,12 @@ package app
 
 import (
 	"fmt"
-	"github.com/cuisongliu/endpoints-balance/controllers"
+	"github.com/sealyun/endpoints-operator/controllers"
 	"k8s.io/apiserver/pkg/util/term"
 	"net/http"
 	"os"
 
-	"github.com/cuisongliu/endpoints-balance/cmd/app/options"
+	"github.com/sealyun/endpoints-operator/cmd/app/options"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
@@ -47,7 +47,7 @@ func NewCommand() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:  "controller-manager",
-		Long: `endpoint-balance controller manager is a daemon that`,
+		Long: `endpoints-operator controller manager is a daemon that`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if errs := s.Validate(); len(errs) != 0 {
 				klog.Error(utilerrors.NewAggregate(errs))
@@ -83,7 +83,7 @@ func run(s *options.Options, stopCh <-chan struct{}) error {
 		mgrOptions = manager.Options{
 			LeaderElection:          s.LeaderElect,
 			LeaderElectionNamespace: "kube-system",
-			LeaderElectionID:        "sealyun-endpoints-balance-leader-election",
+			LeaderElectionID:        "sealyun-endpoints-operator-leader-election",
 			LeaseDuration:           &s.LeaderElection.LeaseDuration,
 			RetryPeriod:             &s.LeaderElection.RetryPeriod,
 			RenewDeadline:           &s.LeaderElection.RenewDeadline,

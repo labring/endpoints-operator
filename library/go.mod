@@ -1,4 +1,4 @@
-module github.com/cuisongliu/endpoints-balance/library
+module github.com/sealyun/endpoints-operator/library
 
 go 1.13
 

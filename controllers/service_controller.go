@@ -18,9 +18,9 @@ package controllers
 
 import (
 	"context"
-	"github.com/cuisongliu/endpoints-balance/library/controller"
-	"github.com/cuisongliu/endpoints-balance/library/convert"
-	"github.com/cuisongliu/endpoints-balance/library/hash"
+	"github.com/sealyun/endpoints-operator/library/controller"
+	"github.com/sealyun/endpoints-operator/library/convert"
+	"github.com/sealyun/endpoints-operator/library/hash"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -65,7 +65,7 @@ func (r *ServiceReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			Version: corev1.SchemeGroupVersion.Version,
 			Kind:    "Service",
 		},
-		FinalizerName: "sealyun.com/endpoint-balance.finalizers",
+		FinalizerName: "sealyun.com/endpoints-operator.finalizers",
 	}
 	service.APIVersion = ctr.Gvk.GroupVersion().String()
 	service.Kind = ctr.Gvk.Kind

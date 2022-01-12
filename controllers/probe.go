@@ -18,10 +18,10 @@ package controllers
 
 import (
 	"fmt"
-	"github.com/cuisongliu/endpoints-balance/library/probe"
-	execprobe "github.com/cuisongliu/endpoints-balance/library/probe/exec"
-	httpprobe "github.com/cuisongliu/endpoints-balance/library/probe/http"
-	tcpprobe "github.com/cuisongliu/endpoints-balance/library/probe/tcp"
+	"github.com/sealyun/endpoints-operator/library/probe"
+	execprobe "github.com/sealyun/endpoints-operator/library/probe/exec"
+	httpprobe "github.com/sealyun/endpoints-operator/library/probe/http"
+	tcpprobe "github.com/sealyun/endpoints-operator/library/probe/tcp"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/klog"

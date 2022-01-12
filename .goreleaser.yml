@@ -15,9 +15,9 @@ builds:
       - arm64
     main: ./cmd
     ldflags:
-      - -X github.com/cuisongliu/endpoints-balance/library/version.gitVersion={{.Version}}
-      - -X github.com/cuisongliu/endpoints-balance/library/version.gitCommit={{.ShortCommit}}
-      - -X github.com/cuisongliu/endpoints-balance/library/version.buildDate={{.Date}}
+      - -X github.com/sealyun/endpoints-operator/library/version.gitVersion={{.Version}}
+      - -X github.com/sealyun/endpoints-operator/library/version.gitCommit={{.ShortCommit}}
+      - -X github.com/sealyun/endpoints-operator/library/version.buildDate={{.Date}}
       - -s -w
 #archives:
 #  - replacements:

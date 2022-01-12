@@ -18,8 +18,8 @@ package exec
 
 import (
 	"bytes"
-	"github.com/cuisongliu/endpoints-balance/library/ioutils"
-	"github.com/cuisongliu/endpoints-balance/library/probe"
+	"github.com/sealyun/endpoints-operator/library/ioutils"
+	"github.com/sealyun/endpoints-operator/library/probe"
 
 	"k8s.io/klog"
 	"k8s.io/utils/exec"

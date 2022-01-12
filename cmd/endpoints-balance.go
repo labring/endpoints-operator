@@ -17,7 +17,7 @@ limitations under the License.
 package main
 
 import (
-	"github.com/cuisongliu/endpoints-balance/cmd/app"
+	"github.com/sealyun/endpoints-operator/cmd/app"
 	"os"
 )
 
