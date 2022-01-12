@@ -40,6 +40,8 @@ type prober struct {
 	tcp  tcpprobe.Prober
 }
 
+var proberCheck = newProber()
+
 // NewProber creates a Prober, it takes a command runner and
 // several container info managers.
 func newProber() *prober {
@@ -57,7 +59,7 @@ func (pb *prober) runProbe(p *v1.Probe) (probe.Result, string, error) {
 	if p.Exec != nil {
 		klog.V(4).Infof("Exec-Probe Command: %v", p.Exec.Command)
 		//command := ""
-		return probe.Unknown, "", nil
+		return probe.Success, "", nil
 	}
 	if p.HTTPGet != nil {
 		scheme := strings.ToLower(string(p.HTTPGet.Scheme))
@@ -82,8 +84,8 @@ func (pb *prober) runProbe(p *v1.Probe) (probe.Result, string, error) {
 		klog.V(4).Infof("TCP-Probe Host: %v, Port: %v, Timeout: %v", host, port, timeout)
 		return pb.tcp.Probe(host, port, timeout)
 	}
-	klog.Warning("Failed to find probe builder for annotation")
-	return probe.Unknown, "", fmt.Errorf("missing probe handler")
+	klog.Warning("failed to find probe builder")
+	return probe.Success, "", nil
 }
 
 func extractPort(param intstr.IntOrString) (int, error) {

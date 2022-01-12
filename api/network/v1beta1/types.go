@@ -25,41 +25,79 @@ import (
 
 // ServicePort contains information on service's port.
 type ServicePort struct {
+	// The action taken to determine the health of a container
+	Handler `json:",inline" protobuf:"bytes,1,opt,name=handler"`
 	// The name of this port within the service. This must be a DNS_LABEL.
 	// All ports within a ServiceSpec must have unique names. When considering
 	// the endpoints for a Service, this must match the 'name' field in the
 	// EndpointPort.
 	// Optional if only one ServicePort is defined on this service.
 	// +optional
-	Name string `json:"name,omitempty" protobuf:"bytes,1,opt,name=name"`
+	Name string `json:"name,omitempty" protobuf:"bytes,2,opt,name=name"`
 
 	// The IP protocol for this port. Supports "TCP", "UDP", and "SCTP".
 	// Default is TCP.
 	// +optional
-	Protocol v1.Protocol `json:"protocol,omitempty" protobuf:"bytes,2,opt,name=protocol,casttype=Protocol"`
+	Protocol v1.Protocol `json:"protocol,omitempty" protobuf:"bytes,3,opt,name=protocol,casttype=Protocol"`
 
 	// The port that will be exposed by this service.
-	Port int32 `json:"port" protobuf:"varint,3,opt,name=port"`
+	Port int32 `json:"port" protobuf:"varint,4,opt,name=port"`
 
 	// Number or name of the port to access on the pods targeted by the service.
 	// Number must be in the range 1 to 65535. Name must be an IANA_SVC_NAME.
 	// If this is a string, it will be looked up as a named port in the
 	// target Pod's container ports. If this is not specified, the value
 	// of the 'port' field is used (an identity map).
-	TargetPort int32 `json:"targetPort" protobuf:"varint,4,opt,name=targetPort"`
+	TargetPort int32 `json:"targetPort" protobuf:"varint,5,opt,name=targetPort"`
+}
+
+// TCPSocketAction describes an action based on opening a socket
+type TCPSocketAction struct {
+	Enable bool `json:"enable" protobuf:"bytes,1,opt,name=enable"`
+}
+
+// HTTPGetAction describes an action based on HTTP Get requests.
+type HTTPGetAction struct {
+	// Path to access on the HTTP server.
+	// +optional
+	Path string `json:"path,omitempty" protobuf:"bytes,1,opt,name=path"`
+	// Scheme to use for connecting to the host.
+	// Defaults to HTTP.
+	// +optional
+	Scheme v1.URIScheme `json:"scheme,omitempty" protobuf:"bytes,4,opt,name=scheme,casttype=URIScheme"`
+	// Custom headers to set in the request. HTTP allows repeated headers.
+	// +optional
+	HTTPHeaders []v1.HTTPHeader `json:"httpHeaders,omitempty" protobuf:"bytes,5,rep,name=httpHeaders"`
+}
+
+// Handler defines a specific action that should be taken
+// TODO: pass structured data to these actions, and document that data here.
+type Handler struct {
+	// HTTPGet specifies the http request to perform.
+	// +optional
+	HTTPGet *HTTPGetAction `json:"httpGet,omitempty" protobuf:"bytes,2,opt,name=httpGet"`
+	// TCPSocket specifies an action involving a TCP port.
+	// TCP hooks not yet supported
+	// TODO: implement a realistic TCP lifecycle hook
+	// +optional
+	TCPSocket *TCPSocketAction `json:"tcpSocket,omitempty" protobuf:"bytes,3,opt,name=tcpSocket"`
 }
 
 // ClusterEndpointSpec defines the desired state of ClusterEndpoint
 type ClusterEndpointSpec struct {
-	ClusterIP string `json:"clusterIP" protobuf:"bytes,1,opt,name=clusterIP"`
+	ClusterIP string `json:"clusterIP,omitempty" protobuf:"bytes,1,opt,name=clusterIP"`
 
 	Ports []ServicePort `json:"ports,omitempty" patchStrategy:"merge" patchMergeKey:"port" protobuf:"bytes,2,rep,name=ports"`
 	Hosts []string      `json:"hosts,omitempty" patchStrategy:"merge" patchMergeKey:"host" protobuf:"bytes,3,rep,name=hosts"`
 	// How often (in seconds) to perform the probe.
 	// Default to 10 seconds. Minimum value is 1.
 	// +optional
-	PeriodSeconds int32        `json:"periodSeconds,omitempty" protobuf:"varint,4,opt,name=periodSeconds"`
-	Probes        []v1.Handler `json:"probes,omitempty" protobuf:"bytes,5,rep,name=probes"`
+	PeriodSeconds int32 `json:"periodSeconds,omitempty" protobuf:"varint,4,opt,name=periodSeconds"`
+	// Number of seconds after which the probe times out.
+	// Defaults to 1 second. Minimum value is 1.
+	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+	// +optional
+	TimeoutSeconds int32 `json:"timeoutSeconds,omitempty" protobuf:"varint,3,opt,name=timeoutSeconds"`
 }
 
 type Phase string

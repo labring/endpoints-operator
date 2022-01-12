@@ -11,26 +11,28 @@
 ## Usage
 
 ```yaml
-apiVersion: v1
-kind: Service
+apiVersion: sealyun.com/v1beta1
+kind: ClusterEndpoint
 metadata:
   name: dmz-kube
-  namespace: default
-  annotations:
-    sealyun.com/server: 10.0.112.251 #add this anniotation auto add eps
 spec:
   clusterIP: 10.96.0.100
-  clusterIPs:
-  - 10.96.0.100
-  internalTrafficPolicy: Cluster
-  ipFamilies:
-  - IPv4
-  ipFamilyPolicy: SingleStack
+  periodSeconds: 10
+  timeoutSeconds: 1
+  hosts:
+    - 10.0.112.255
   ports:
-  - name: https
-    port: 6443
-    protocol: TCP
-    targetPort: 6443
-  sessionAffinity: None
-  type: ClusterIP
+    - name: https
+      port: 6443
+      protocol: TCP
+      targetPort: 6443
+      tcpSocket:
+        enable: true
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 80
+      httpGet:
+        path: /
+        scheme: http
 ```
