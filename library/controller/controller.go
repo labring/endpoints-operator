@@ -29,6 +29,7 @@ import (
 	"k8s.io/client-go/util/retry"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"strings"
 )
@@ -73,16 +74,11 @@ func (r *Controller) Run(ctx context.Context, req ctrl.Request, obj runtime.Obje
 		// The object is not being deleted, so if it does not have our finalizer,
 		// then lets add the finalizer and update the object. This is equivalent
 		// registering our finalizer.
-		if !tools.ContainsString(ustructObj.GetFinalizers(), r.FinalizerName) {
-			finalizers := ustructObj.GetFinalizers()
-			finalizers = append(finalizers, r.FinalizerName)
-			ustructObj.SetFinalizers(finalizers)
-			if err = r.setFinalizers(ctx, req, obj, finalizers); err != nil {
-				r.Eventer.Eventf(obj, corev1.EventTypeWarning, "FailedUpdate", "Update %s: %v", lowerKind, err)
-				//如果修改失败重新放入队列
-				r.Logger.Error(err, "unable to set finalizer", "finalizer", r.FinalizerName)
-				return ctrl.Result{Requeue: true}, err
-			}
+		if err = controllerutil.AddFinalizerWithError(ustructObj, r.FinalizerName); err != nil {
+			r.Eventer.Eventf(obj, corev1.EventTypeWarning, "FailedUpdate", "Update %s: %v", lowerKind, err)
+			//如果修改失败重新放入队列
+			r.Logger.Error(err, "unable to set finalizer", "finalizer", r.FinalizerName)
+			return ctrl.Result{Requeue: true}, err
 		}
 		return r.Operator.Update(ctx, req, r.Gvk, ustructObj)
 	} else {
@@ -102,10 +98,7 @@ func (r *Controller) Run(ctx context.Context, req ctrl.Request, obj runtime.Obje
 				return ctrl.Result{Requeue: true}, err
 			}
 			// remove our finalizer from the list and update it.
-			finalizers := ustructObj.GetFinalizers()
-			finalizers = tools.RemoveString(finalizers, r.FinalizerName)
-			ustructObj.SetFinalizers(finalizers)
-			if err = r.setFinalizers(ctx, req, obj, finalizers); err != nil {
+			if err = controllerutil.RemoveFinalizerWithError(ustructObj, r.FinalizerName); err != nil {
 				r.Eventer.Eventf(obj, corev1.EventTypeWarning, "FailedDelete", "Deleted %s: %v", lowerKind, err)
 				r.Logger.Error(err, "failed set finalizer the resource", "err", err.Error())
 				return ctrl.Result{Requeue: true}, err

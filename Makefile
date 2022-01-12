@@ -54,3 +54,21 @@ filelicense: install-addlicense
 			$(ADDLICENSE_BIN)  -y $(shell date +"%Y") -c "sealyun." -f hack/LICENSE ./$$file ; \
 		fi \
     done
+
+
+DEEPCOPY_BIN = $(shell pwd)/bin/deepcopy-gen
+install-deepcopy: ## check license if not exist install go-lint tools
+	$(call go-get-tool,$(DEEPCOPY_BIN),k8s.io/code-generator/cmd/deepcopy-gen@latest)
+
+HEAD_FILE := hack/boilerplate.go.txt
+INPUT_DIR := github.com/sealyun/endpoints-operator/api/network/v1beta1
+deepcopy:install-deepcopy
+	$(DEEPCOPY_BIN) \
+      --input-dirs="$(INPUT_DIR)" \
+      -O zz_generated.deepcopy   \
+      --go-header-file "$(HEAD_FILE)" \
+      --output-base "${GOPATH}/src"
+
+# Generate manifests e.g. CRD, RBAC etc.
+manifests:
+	controller-gen crd:trivialVersions=true rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd
