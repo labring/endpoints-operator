@@ -17,6 +17,7 @@ limitations under the License.
 package controllers
 
 import (
+	"errors"
 	"fmt"
 	"github.com/sealyun/endpoints-operator/library/probe"
 	execprobe "github.com/sealyun/endpoints-operator/library/probe/exec"
@@ -24,6 +25,7 @@ import (
 	tcpprobe "github.com/sealyun/endpoints-operator/library/probe/tcp"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	urutime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/klog"
 	"net"
 	"net/http"
@@ -32,6 +34,58 @@ import (
 	"strings"
 	"time"
 )
+
+type work struct {
+	p          *v1.Probe
+	resultRun  int
+	lastResult probe.Result
+	err        error
+}
+
+func (pb *prober) runProbeWithRetries(p *v1.Probe, retries int) (probe.Result, string, error) {
+	var err error
+	var result probe.Result
+	var output string
+	for i := 0; i < retries; i++ {
+		result, output, err = pb.runProbe(p)
+		if err == nil {
+			return result, output, nil
+		}
+	}
+	return result, output, err
+}
+
+func (w *work) doProbe() (keepGoing bool) {
+	defer func() { recover() }() // Actually eat panics (HandleCrash takes care of logging)
+	defer urutime.HandleCrash(func(_ interface{}) { keepGoing = true })
+
+	// the full container environment here, OR we must make a call to the CRI in order to get those environment
+	// values from the running container.
+	result, output, err := proberCheck.runProbeWithRetries(w.p, 3)
+	if err != nil {
+		w.err = err
+		return false
+	}
+
+	if w.lastResult == result {
+		w.resultRun++
+	} else {
+		w.lastResult = result
+		w.resultRun = 1
+	}
+
+	if (result == probe.Failure && w.resultRun < int(w.p.FailureThreshold)) ||
+		(result == probe.Success && w.resultRun < int(w.p.SuccessThreshold)) {
+		// Success or failure is below threshold - leave the probe state unchanged.
+		return true
+	}
+	if err != nil {
+		w.err = err
+	} else if len(output) != 0 {
+		w.err = errors.New(output)
+	}
+	return false
+}
 
 // Prober helps to check the liveness/readiness/startup of a container.
 type prober struct {
