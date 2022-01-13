@@ -32,6 +32,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	urutime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/retry"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -193,7 +194,6 @@ func (c *Reconciler) syncEndpoint(ctx context.Context, cep *v1beta1.ClusterEndpo
 		ep.SetNamespace(cep.Namespace)
 		_, err := controllerutil.CreateOrUpdate(ctx, c.Client, ep, func() error {
 			ep.Labels = map[string]string{}
-			ep.Subsets = make([]corev1.EndpointSubset, 0)
 			healthyHosts := make([]string, 0)
 			e := make([]string, 0)
 			for _, h := range cep.Spec.Hosts {
@@ -209,7 +209,7 @@ func (c *Reconciler) syncEndpoint(ctx context.Context, cep *v1beta1.ClusterEndpo
 					Addresses: hosts,
 					Ports:     convertPorts(cep.Spec.Ports),
 				}
-				ep.Subsets = append(ep.Subsets, es)
+				ep.Subsets = []corev1.EndpointSubset{es}
 			}
 			if len(e) != 0 {
 				return fmt.Errorf(strings.Join(e, ";;"))
@@ -235,11 +235,19 @@ func healthyCheck(ctx context.Context, host string, cep *v1beta1.ClusterEndpoint
 	pg, _ := errgroup.WithContext(ctx)
 	for _, p := range cep.Spec.Ports {
 		pg.Go(func() error {
-			if cep.Spec.TimeoutSeconds == 0 {
-				cep.Spec.TimeoutSeconds = 1
+			if p.TimeoutSeconds == 0 {
+				p.TimeoutSeconds = 1
+			}
+			if p.SuccessThreshold == 0 {
+				p.SuccessThreshold = 1
+			}
+			if p.FailureThreshold == 0 {
+				p.FailureThreshold = 3
 			}
 			pro := &corev1.Probe{
-				TimeoutSeconds: cep.Spec.TimeoutSeconds,
+				TimeoutSeconds:   p.TimeoutSeconds,
+				SuccessThreshold: p.SuccessThreshold,
+				FailureThreshold: p.FailureThreshold,
 			}
 			if p.HTTPGet != nil {
 				pro.HTTPGet = &corev1.HTTPGetAction{
@@ -256,20 +264,67 @@ func healthyCheck(ctx context.Context, host string, cep *v1beta1.ClusterEndpoint
 					Host: host,
 				}
 			}
-			result, output, err := proberCheck.runProbe(pro)
-			if err != nil || (result != probe.Success && result != probe.Warning) {
-				// Probe failed in one way or another.
-				if err != nil {
-					return err
-				} else { // result != probe.Success
-					return errors.New(output)
-				}
+			w := &work{p: pro}
+			for w.doProbe() {
 			}
-			return nil
+			return w.err
 		})
 	}
 	return pg.Wait()
 }
+
+type work struct {
+	p          *corev1.Probe
+	resultRun  int
+	lastResult probe.Result
+	err        error
+}
+
+func (pb *prober) runProbeWithRetries(p *corev1.Probe, retries int) (probe.Result, string, error) {
+	var err error
+	var result probe.Result
+	var output string
+	for i := 0; i < retries; i++ {
+		result, output, err = pb.runProbe(p)
+		if err == nil {
+			return result, output, nil
+		}
+	}
+	return result, output, err
+}
+
+func (w *work) doProbe() (keepGoing bool) {
+	defer func() { recover() }() // Actually eat panics (HandleCrash takes care of logging)
+	defer urutime.HandleCrash(func(_ interface{}) { keepGoing = true })
+
+	// the full container environment here, OR we must make a call to the CRI in order to get those environment
+	// values from the running container.
+	result, output, err := proberCheck.runProbeWithRetries(w.p, 3)
+	if err != nil {
+		w.err = err
+		return false
+	}
+
+	if w.lastResult == result {
+		w.resultRun++
+	} else {
+		w.lastResult = result
+		w.resultRun = 1
+	}
+
+	if (result == probe.Failure && w.resultRun < int(w.p.FailureThreshold)) ||
+		(result == probe.Success && w.resultRun < int(w.p.SuccessThreshold)) {
+		// Success or failure is below threshold - leave the probe state unchanged.
+		return true
+	}
+	if err != nil {
+		w.err = err
+	} else if len(output) != 0 {
+		w.err = errors.New(output)
+	}
+	return false
+}
+
 func (c *Reconciler) updateStatus(ctx context.Context, nn types.NamespacedName, status *v1beta1.ClusterEndpointStatus) error {
 	if err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		original := &v1beta1.ClusterEndpoint{}

@@ -62,6 +62,12 @@ spec:
                 items:
                   description: ServicePort contains information on service's port.
                   properties:
+                    failureThreshold:
+                      description: Minimum consecutive failures for the probe to be
+                        considered failed after having succeeded. Defaults to 3. Minimum
+                        value is 1.
+                      format: int32
+                      type: integer
                     httpGet:
                       description: HTTPGet specifies the http request to perform.
                       properties:
@@ -106,6 +112,12 @@ spec:
                       description: The IP protocol for this port. Supports "TCP",
                         "UDP", and "SCTP". Default is TCP.
                       type: string
+                    successThreshold:
+                      description: Minimum consecutive successes for the probe to
+                        be considered successful after having failed. Defaults to
+                        1. Must be 1 for liveness and startup. Minimum value is 1.
+                      format: int32
+                      type: integer
                     targetPort:
                       description: Number or name of the port to access on the pods
                         targeted by the service. Number must be in the range 1 to
@@ -125,16 +137,17 @@ spec:
                       required:
                       - enable
                       type: object
+                    timeoutSeconds:
+                      description: 'Number of seconds after which the probe times
+                        out. Defaults to 1 second. Minimum value is 1. More info:
+                        https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes'
+                      format: int32
+                      type: integer
                   required:
                   - port
                   - targetPort
                   type: object
                 type: array
-              timeoutSeconds:
-                description: 'Number of seconds after which the probe times out. Defaults
-                  to 1 second. Minimum value is 1. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes'
-                format: int32
-                type: integer
             type: object
           status:
             description: ClusterEndpointStatus defines the observed state of ClusterEndpoint
