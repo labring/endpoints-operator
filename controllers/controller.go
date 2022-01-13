@@ -193,7 +193,6 @@ func (c *Reconciler) syncEndpoint(ctx context.Context, cep *v1beta1.ClusterEndpo
 		ep.SetNamespace(cep.Namespace)
 		_, err := controllerutil.CreateOrUpdate(ctx, c.Client, ep, func() error {
 			ep.Labels = map[string]string{}
-			ep.Subsets = make([]corev1.EndpointSubset, 0)
 			healthyHosts := make([]string, 0)
 			e := make([]string, 0)
 			for _, h := range cep.Spec.Hosts {
@@ -209,7 +208,7 @@ func (c *Reconciler) syncEndpoint(ctx context.Context, cep *v1beta1.ClusterEndpo
 					Addresses: hosts,
 					Ports:     convertPorts(cep.Spec.Ports),
 				}
-				ep.Subsets = append(ep.Subsets, es)
+				ep.Subsets = []corev1.EndpointSubset{es}
 			}
 			if len(e) != 0 {
 				return fmt.Errorf(strings.Join(e, ";;"))
