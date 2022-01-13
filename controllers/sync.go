@@ -94,7 +94,7 @@ func (c *Reconciler) syncEndpoint(ctx context.Context, cep *v1beta1.ClusterEndpo
 					})
 				}
 				subErr := ToAggregate(errors)
-				if len(subErr.Errors()) != 0 {
+				if subErr != nil && len(subErr.Errors()) != 0 {
 					e = append(e, fmt.Errorf(subErr.Error()))
 				}
 
