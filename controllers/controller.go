@@ -234,6 +234,7 @@ func (c *Reconciler) syncEndpoint(ctx context.Context, cep *v1beta1.ClusterEndpo
 func healthyCheck(ctx context.Context, host string, cep *v1beta1.ClusterEndpoint) error {
 	pg, _ := errgroup.WithContext(ctx)
 	for _, p := range cep.Spec.Ports {
+		p := p
 		pg.Go(func() error {
 			if p.TimeoutSeconds == 0 {
 				p.TimeoutSeconds = 1
