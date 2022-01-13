@@ -41,5 +41,6 @@ rules:
       - 'sealyun.com'
     resources:
       - clusterendpoints
+      - clusterendpoints/status
     verbs:
       - '*'
