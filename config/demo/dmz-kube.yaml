@@ -22,6 +22,7 @@ spec:
   timeoutSeconds: 1
   hosts:
     - 10.0.112.255
+    - 10.0.112.251
   ports:
     - name: https
       port: 6443
@@ -29,10 +30,3 @@ spec:
       targetPort: 6443
       tcpSocket:
         enable: true
-    - name: http
-      port: 80
-      protocol: TCP
-      targetPort: 80
-      httpGet:
-        path: /
-        scheme: http

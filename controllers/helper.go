@@ -173,7 +173,7 @@ func (c *Reconciler) updateCondition(cep *v1beta1.ClusterEndpoint, condition v1b
 	for i, cond := range cep.Status.Conditions {
 		if cond.Type == condition.Type {
 			hasCondition = true
-			if cond.Reason != condition.Reason || cond.Status != condition.Status {
+			if cond.Reason != condition.Reason || cond.Status != condition.Status || cond.Message != condition.Message {
 				cep.Status.Conditions[i] = condition
 			}
 		}

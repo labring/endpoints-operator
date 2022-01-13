@@ -1,12 +1,46 @@
 # endpoints-operator
 > 场景对于外部场景使用固定的endpoint维护增加探活功能
 
-根据service数据生成endpoint数据
+## 背景
+在很多场景下，用户集群可能需要访问集群外的数据，这时候又想使用service提供的功能，我们一般创建一个空的service，并手动绑定对应的endpoint.
 
-1. 根据service的port映射对应的endpoints数据
-2. targetPort 不能使用string只能对应int数据
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-kube
+  namespace: default
+spec:
+  clusterIP: 10.96.0.100
+  clusterIPs:
+  - 10.96.0.100
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: mysql
+    port: 3306
+    protocol: TCP
+    targetPort: 3306
+  sessionAffinity: None
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: mysql-kube
+  namespace: default
+subsets:
+- addresses:
+  - ip: 10.0.99.251
+  ports:
+  - name: mysql
+    port: 3306
+    protocol: TCP
+```
 
-
+这样手动设置了对应的
 
 ## Usage
 
