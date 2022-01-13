@@ -40,7 +40,10 @@ subsets:
     protocol: TCP
 ```
 
-这样手动设置了对应的
+这样手动设置了对应的endpoint我们就可以通过service进行访问，但是有个缺点就是如果服务挂掉kube-proxy并检测不到对应的IP是否通讯OK。这个controller主要就是解决这两个问题：
+
+1. 设置cr同步对应的service和endpoint
+2. 定时轮训IP如果探针有问题
 
 ## Usage
 
