@@ -85,7 +85,7 @@ func (pb *prober) runProbe(p *v1.Probe) (probe.Result, string, error) {
 		return pb.tcp.Probe(host, port, timeout)
 	}
 	klog.Warning("failed to find probe builder")
-	return probe.Success, "", nil
+	return probe.Warning, "", nil
 }
 
 func extractPort(param intstr.IntOrString) (int, error) {

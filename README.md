@@ -18,7 +18,6 @@ metadata:
 spec:
   clusterIP: 10.96.0.100
   periodSeconds: 10
-  timeoutSeconds: 1
   hosts:
     - 10.0.112.255
   ports:
@@ -26,6 +25,9 @@ spec:
       port: 6443
       protocol: TCP
       targetPort: 6443
+      timeoutSeconds: 1
+      successThreshold: 1
+      failureThreshold: 3
       tcpSocket:
         enable: true
     - name: http

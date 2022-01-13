@@ -27,28 +27,41 @@ import (
 type ServicePort struct {
 	// The action taken to determine the health of a container
 	Handler `json:",inline" protobuf:"bytes,1,opt,name=handler"`
+	// Number of seconds after which the probe times out.
+	// Defaults to 1 second. Minimum value is 1.
+	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+	// +optional
+	TimeoutSeconds int32 `json:"timeoutSeconds,omitempty" protobuf:"varint,3,opt,name=timeoutSeconds"`
+	// Minimum consecutive successes for the probe to be considered successful after having failed.
+	// Defaults to 1. Must be 1 for liveness and startup. Minimum value is 1.
+	// +optional
+	SuccessThreshold int32 `json:"successThreshold,omitempty" protobuf:"varint,4,opt,name=successThreshold"`
+	// Minimum consecutive failures for the probe to be considered failed after having succeeded.
+	// Defaults to 3. Minimum value is 1.
+	// +optional
+	FailureThreshold int32 `json:"failureThreshold,omitempty" protobuf:"varint,5,opt,name=failureThreshold"`
 	// The name of this port within the service. This must be a DNS_LABEL.
 	// All ports within a ServiceSpec must have unique names. When considering
 	// the endpoints for a Service, this must match the 'name' field in the
 	// EndpointPort.
 	// Optional if only one ServicePort is defined on this service.
 	// +optional
-	Name string `json:"name,omitempty" protobuf:"bytes,2,opt,name=name"`
+	Name string `json:"name,omitempty" protobuf:"bytes,6,opt,name=name"`
 
 	// The IP protocol for this port. Supports "TCP", "UDP", and "SCTP".
 	// Default is TCP.
 	// +optional
-	Protocol v1.Protocol `json:"protocol,omitempty" protobuf:"bytes,3,opt,name=protocol,casttype=Protocol"`
+	Protocol v1.Protocol `json:"protocol,omitempty" protobuf:"bytes,7,opt,name=protocol,casttype=Protocol"`
 
 	// The port that will be exposed by this service.
-	Port int32 `json:"port" protobuf:"varint,4,opt,name=port"`
+	Port int32 `json:"port" protobuf:"varint,8,opt,name=port"`
 
 	// Number or name of the port to access on the pods targeted by the service.
 	// Number must be in the range 1 to 65535. Name must be an IANA_SVC_NAME.
 	// If this is a string, it will be looked up as a named port in the
 	// target Pod's container ports. If this is not specified, the value
 	// of the 'port' field is used (an identity map).
-	TargetPort int32 `json:"targetPort" protobuf:"varint,5,opt,name=targetPort"`
+	TargetPort int32 `json:"targetPort" protobuf:"varint,10,opt,name=targetPort"`
 }
 
 // TCPSocketAction describes an action based on opening a socket
@@ -93,11 +106,6 @@ type ClusterEndpointSpec struct {
 	// Default to 10 seconds. Minimum value is 1.
 	// +optional
 	PeriodSeconds int32 `json:"periodSeconds,omitempty" protobuf:"varint,4,opt,name=periodSeconds"`
-	// Number of seconds after which the probe times out.
-	// Defaults to 1 second. Minimum value is 1.
-	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
-	// +optional
-	TimeoutSeconds int32 `json:"timeoutSeconds,omitempty" protobuf:"varint,3,opt,name=timeoutSeconds"`
 }
 
 type Phase string
