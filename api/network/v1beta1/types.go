@@ -84,14 +84,12 @@ type HTTPGetAction struct {
 }
 
 // Handler defines a specific action that should be taken
-// TODO: pass structured data to these actions, and document that data here.
 type Handler struct {
 	// HTTPGet specifies the http request to perform.
 	// +optional
 	HTTPGet *HTTPGetAction `json:"httpGet,omitempty" protobuf:"bytes,2,opt,name=httpGet"`
 	// TCPSocket specifies an action involving a TCP port.
 	// TCP hooks not yet supported
-	// TODO: implement a realistic TCP lifecycle hook
 	// +optional
 	TCPSocket *TCPSocketAction `json:"tcpSocket,omitempty" protobuf:"bytes,3,opt,name=tcpSocket"`
 }

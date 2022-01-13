@@ -30,7 +30,6 @@ func NewTimeoutError(err error, timeout time.Duration) *TimeoutError {
 
 // TimeoutError is an error returned on exec probe timeouts. It should be returned by CRI implementations
 // in order for the exec prober to interpret exec timeouts as failed probes.
-// TODO: this error type can likely be removed when we support CRI errors.
 type TimeoutError struct {
 	err     error
 	timeout time.Duration

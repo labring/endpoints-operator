@@ -297,7 +297,6 @@ func (w *work) doProbe() (keepGoing bool) {
 	defer func() { recover() }() // Actually eat panics (HandleCrash takes care of logging)
 	defer urutime.HandleCrash(func(_ interface{}) { keepGoing = true })
 
-	// TODO: in order for exec probes to correctly handle downward API env, we must be able to reconstruct
 	// the full container environment here, OR we must make a call to the CRI in order to get those environment
 	// values from the running container.
 	result, output, err := proberCheck.runProbeWithRetries(w.p, 3)
