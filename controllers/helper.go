@@ -156,6 +156,9 @@ func isConditionsTrue(ce *v1beta1.ClusterEndpoint) bool {
 		return false
 	}
 	for _, condition := range ce.Status.Conditions {
+		if condition.Type == v1beta1.Ready {
+			continue
+		}
 		if condition.Status != v1.ConditionTrue {
 			return false
 		}
