@@ -83,6 +83,9 @@ func (c *Reconciler) syncEndpoint(ctx context.Context, cep *v1beta1.ClusterEndpo
 		ep.SetNamespace(cep.Namespace)
 		_, err := controllerutil.CreateOrUpdate(ctx, c.Client, ep, func() error {
 			ep.Labels = map[string]string{}
+			if err := controllerutil.SetControllerReference(cep, ep, c.scheme); err != nil {
+				return err
+			}
 			healthyHosts := make([]healthyHostAndPort, 0)
 			e := make([]error, 0)
 			for _, h := range cep.Spec.Hosts {
