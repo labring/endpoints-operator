@@ -108,6 +108,8 @@ func (c *Reconciler) syncEndpoint(ctx context.Context, cep *v1beta1.ClusterEndpo
 					subsets = append(subsets, subset.toEndpoint())
 				}
 				ep.Subsets = subsets
+			} else {
+				ep.Subsets = []corev1.EndpointSubset{}
 			}
 			if len(e) != 0 {
 				updateError = ToAggregate(e)
