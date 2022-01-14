@@ -1,49 +1,18 @@
 # endpoints-operator
-> 场景对于外部场景使用固定的endpoint维护增加探活功能
+
+> 对于集群内访问集群外部服务场景使用固定的endpoint维护增加探活功能
 
 ## 背景
-在很多场景下，用户集群可能需要访问集群外的数据，这时候又想使用service提供的功能，我们一般创建一个空的service，并手动绑定对应的endpoint.
 
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: mysql-kube
-  namespace: default
-spec:
-  clusterIP: 10.96.0.100
-  clusterIPs:
-  - 10.96.0.100
-  internalTrafficPolicy: Cluster
-  ipFamilies:
-  - IPv4
-  ipFamilyPolicy: SingleStack
-  ports:
-  - name: mysql
-    port: 3306
-    protocol: TCP
-    targetPort: 3306
-  sessionAffinity: None
-  type: ClusterIP
----
-apiVersion: v1
-kind: Endpoints
-metadata:
-  name: mysql-kube
-  namespace: default
-subsets:
-- addresses:
-  - ip: 10.0.99.251
-  ports:
-  - name: mysql
-    port: 3306
-    protocol: TCP
+在实际使用中，两个K8s集群内的服务经常有互相访问和访问集群外部某些服务的需求，通常的解决方案为写固定的servcie和edpoints或者直接写IP等来解决，在这时候，是没有对外部服务的探活功能的，如果需要探活功能一般是引入一个高可用LB来解决。
+
+本项目利用了K8s原生service功能的ipvs虚IP和负载功能，保证了虚IP本身是高可用的，同时增加了对后端endpoints的定时探活功能，可以在后端endpoints探活失败后从endpoints列表中踢出，保证了svc后端的epdpoints永远是健康的。
+
+## 安装
+
+```bash
+helm install -n <namespce> endpoints-operator config/charts/endpoints-operator
 ```
-
-这样手动设置了对应的endpoint我们就可以通过service进行访问，但是有个缺点就是如果服务挂掉kube-proxy并检测不到对应的IP是否通讯OK。这个controller主要就是解决这两个问题：
-
-1. 设置cr同步对应的service和endpoint
-2. 定时轮训IP如果探针有问题
 
 ## Usage
 
