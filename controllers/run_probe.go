@@ -79,9 +79,10 @@ func (w *work) doProbe() (keepGoing bool) {
 		// Success or failure is below threshold - leave the probe state unchanged.
 		return true
 	}
+
 	if err != nil {
 		w.err = err
-	} else if len(output) != 0 {
+	} else if result == probe.Failure && len(output) != 0 {
 		w.err = errors.New(output)
 	}
 	return false
