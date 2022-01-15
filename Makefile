@@ -51,7 +51,7 @@ filelicense:
 filelicense: install-addlicense
 	for file in ${Dirs} ; do \
 		if [[  $$file != '_output' && $$file != 'docs' && $$file != 'vendor' && $$file != 'logger' && $$file != 'applications' ]]; then \
-			$(ADDLICENSE_BIN)  -y $(shell date +"%Y") -c "sealyun." -f hack/LICENSE ./$$file ; \
+			$(ADDLICENSE_BIN)  -y $(shell date +"%Y") -c "The sealyun Authors." -f hack/LICENSE ./$$file ; \
 		fi \
     done
 
