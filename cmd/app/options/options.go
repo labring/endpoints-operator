@@ -1,4 +1,4 @@
-// Copyright © 2022 cuisongliu@qq.com.
+// Copyright © 2022 The sealyun Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,10 +28,8 @@ import (
 type Options struct {
 	LeaderElect    bool
 	LeaderElection *leaderelection.LeaderElectionConfig
-	SyncPeriod     time.Duration
 }
 
-//	fs.DurationVar(&o.config.IPVS.SyncPeriod.Duration, "ipvs-sync-period", o.config.IPVS.SyncPeriod.Duration, "The maximum interval of how often ipvs rules are refreshed (e.g. '5s', '1m', '2h22m').  Must be greater than 0.")
 func NewOptions() *Options {
 	s := &Options{
 		LeaderElection: &leaderelection.LeaderElectionConfig{
