@@ -30,6 +30,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	runtimecontroller "sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
@@ -85,7 +86,7 @@ func (c *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	c.Logger.V(4).Info("init reconcile controller service")
 	owner := &handler.EnqueueRequestForOwner{OwnerType: &v1beta1.ClusterEndpoint{}, IsController: false}
 	return ctrl.NewControllerManagedBy(mgr).WithEventFilter(&ResourceChangedPredicate{}).
-		Watches(&source.Kind{Type: &corev1.Service{}}, owner).
+		Watches(&source.Kind{Type: &corev1.Service{}}, owner).WithOptions(runtimecontroller.Options{MaxConcurrentReconciles: 1}).
 		For(&v1beta1.ClusterEndpoint{}).Complete(c)
 }
 
