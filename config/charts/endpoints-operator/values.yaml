@@ -28,6 +28,7 @@ loglevel: 6
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
+maxconcurrent: 1
 
 podAnnotations: {}
 
