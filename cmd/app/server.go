@@ -99,9 +99,11 @@ func run(s *options.Options, stopCh <-chan struct{}) error {
 	if err != nil {
 		klog.Fatalf("unable to set up overall controller manager: %v", err)
 	}
+	klog.V(0).Info("[****] MaxConcurrent value is ", s.MaxConcurrent)
 
 	controllers.Install(scheme)
 	clusterReconciler := &controllers.Reconciler{}
+	clusterReconciler.WorkNum = s.MaxConcurrent
 
 	if err = clusterReconciler.SetupWithManager(mgr); err != nil {
 		klog.Fatal("Unable to create cluster controller ", err)

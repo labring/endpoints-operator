@@ -49,6 +49,7 @@ type Reconciler struct {
 	cache     cache.Cache
 	scheme    *runtime.Scheme
 	LoopCount int
+	WorkNum   int
 }
 
 func (r *Reconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
@@ -86,7 +87,7 @@ func (c *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	c.Logger.V(4).Info("init reconcile controller service")
 	owner := &handler.EnqueueRequestForOwner{OwnerType: &v1beta1.ClusterEndpoint{}, IsController: false}
 	return ctrl.NewControllerManagedBy(mgr).WithEventFilter(&ResourceChangedPredicate{}).
-		Watches(&source.Kind{Type: &corev1.Service{}}, owner).WithOptions(runtimecontroller.Options{MaxConcurrentReconciles: 1}).
+		Watches(&source.Kind{Type: &corev1.Service{}}, owner).WithOptions(runtimecontroller.Options{MaxConcurrentReconciles: c.WorkNum}).
 		For(&v1beta1.ClusterEndpoint{}).Complete(c)
 }
 

@@ -29,6 +29,7 @@ type Options struct {
 	LeaderElect    bool
 	LeaderElection *leaderelection.LeaderElectionConfig
 	SyncPeriod     time.Duration
+	MaxConcurrent  int
 }
 
 //	fs.DurationVar(&o.config.IPVS.SyncPeriod.Duration, "ipvs-sync-period", o.config.IPVS.SyncPeriod.Duration, "The maximum interval of how often ipvs rules are refreshed (e.g. '5s', '1m', '2h22m').  Must be greater than 0.")
@@ -62,6 +63,13 @@ func (s *Options) Flags() cliflag.NamedFlagSets {
 		fl.Name = strings.Replace(fl.Name, "_", "-", -1)
 		kfs.AddGoFlag(fl)
 	})
+
+	// add MaxConcurrent args
+	// MaxConcurrent this is the maximum number of concurrent Reconciles which can be run. Defaults to 1.
+	mc := fss.FlagSet("Worker")
+
+	mc.IntVar(&s.MaxConcurrent, "maxconcurrent", 1, "MaxConcurrent this is the maximum number of concurrent Reconciles "+
+		"which can be run. Defaults to 1.")
 
 	return fss
 }
