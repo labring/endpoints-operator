@@ -1,4 +1,4 @@
-// Copyright © 2022 The sealyun Authors.
+// Copyright © 2022 cuisongliu@qq.com.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -99,21 +99,11 @@ func run(s *options.Options, stopCh <-chan struct{}) error {
 	if err != nil {
 		klog.Fatalf("unable to set up overall controller manager: %v", err)
 	}
+	klog.V(0).Info("[****] MaxConcurrent value is ", s.MaxConcurrent)
 
 	controllers.Install(scheme)
 	clusterReconciler := &controllers.Reconciler{}
-	// set MaxConcurrent
-	if s.MaxConcurrent > 0 {
-		clusterReconciler.WorkNum = s.MaxConcurrent
-	} else {
-		clusterReconciler.WorkNum = 1
-	}
-
-	if s.MaxConcurrent > 0 {
-		clusterReconciler.WorkerNum = s.MaxConcurrent
-	} else {
-		clusterReconciler.WorkerNum = 1
-	}
+	clusterReconciler.WorkNum = s.MaxConcurrent
 
 	if err = clusterReconciler.SetupWithManager(mgr); err != nil {
 		klog.Fatal("Unable to create cluster controller ", err)
