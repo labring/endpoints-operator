@@ -117,6 +117,12 @@ func run(s *options.Options, ctx context.Context) error {
 		clusterReconciler.RetryCount = 1
 	}
 
+	if s.MaxConcurrent > 0 {
+		clusterReconciler.WorkerNum = s.MaxConcurrent
+	} else {
+		clusterReconciler.WorkerNum = 1
+	}
+
 	if err = clusterReconciler.SetupWithManager(mgr); err != nil {
 		klog.Fatal("Unable to create cluster controller ", err)
 	}
