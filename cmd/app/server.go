@@ -103,7 +103,11 @@ func run(s *options.Options, stopCh <-chan struct{}) error {
 
 	controllers.Install(scheme)
 	clusterReconciler := &controllers.Reconciler{}
-	clusterReconciler.WorkNum = s.MaxConcurrent
+	if s.MaxConcurrent > 0 {
+		clusterReconciler.WorkNum = s.MaxConcurrent
+	} else {
+		clusterReconciler.WorkNum = 1
+	}
 
 	if err = clusterReconciler.SetupWithManager(mgr); err != nil {
 		klog.Fatal("Unable to create cluster controller ", err)
