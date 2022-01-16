@@ -28,7 +28,6 @@ import (
 type Options struct {
 	LeaderElect    bool
 	LeaderElection *leaderelection.LeaderElectionConfig
-	SyncPeriod     time.Duration
 	MaxConcurrent  int
 }
 
