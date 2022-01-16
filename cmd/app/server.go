@@ -102,6 +102,12 @@ func run(s *options.Options, stopCh <-chan struct{}) error {
 
 	controllers.Install(scheme)
 	clusterReconciler := &controllers.Reconciler{}
+	// set MaxConcurrent
+	if s.MaxConcurrent > 0 {
+		clusterReconciler.WorkNum = s.MaxConcurrent
+	} else {
+		clusterReconciler.WorkNum = 1
+	}
 
 	if s.MaxConcurrent > 0 {
 		clusterReconciler.WorkerNum = s.MaxConcurrent
