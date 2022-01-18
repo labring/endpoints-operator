@@ -173,12 +173,6 @@ func healthyCheck(host string, cep *v1beta1.ClusterEndpoint) ([]v1beta1.ServiceP
 					HTTPHeaders: port.HTTPGet.HTTPHeaders,
 				}
 			}
-			if port.UDPSocket != nil && port.UDPSocket.Enable {
-				pro.TCPSocket = &corev1.TCPSocketAction{
-					Port: intstr.FromInt(int(port.TargetPort)),
-					Host: host,
-				}
-			}
 			network := ""
 			if port.TCPSocket != nil && port.TCPSocket.Enable {
 				network = "tcp"
