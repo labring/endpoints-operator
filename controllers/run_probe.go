@@ -20,6 +20,7 @@ package controllers
 import (
 	"errors"
 	"fmt"
+	libv1 "github.com/sealyun/endpoints-operator/library/api/core/v1"
 	"github.com/sealyun/endpoints-operator/library/probe"
 	execprobe "github.com/sealyun/endpoints-operator/library/probe/exec"
 	httpprobe "github.com/sealyun/endpoints-operator/library/probe/http"
@@ -38,14 +39,14 @@ import (
 )
 
 type work struct {
-	p          *v1.Probe
+	p          *libv1.Probe
 	network    string
 	resultRun  int
 	lastResult probe.Result
 	err        error
 }
 
-func (pb *prober) runProbeWithRetries(p *v1.Probe, network string, retries int) (probe.Result, string, error) {
+func (pb *prober) runProbeWithRetries(p *libv1.Probe, network string, retries int) (probe.Result, string, error) {
 	var err error
 	var result probe.Result
 	var output string
@@ -114,7 +115,7 @@ func newProber() *prober {
 	}
 }
 
-func (pb *prober) runProbe(p *v1.Probe, network string) (probe.Result, string, error) {
+func (pb *prober) runProbe(p *libv1.Probe, network string) (probe.Result, string, error) {
 	timeout := time.Duration(p.TimeoutSeconds) * time.Second
 	if p.Exec != nil {
 		klog.V(4).Infof("Exec-Probe Command: %v", p.Exec.Command)

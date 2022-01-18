@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/sealyun/endpoints-operator/api/network/v1beta1"
+	libv1 "github.com/sealyun/endpoints-operator/library/api/core/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -159,13 +160,13 @@ func healthyCheck(host string, cep *v1beta1.ClusterEndpoint) ([]v1beta1.ServiceP
 			if port.FailureThreshold == 0 {
 				port.FailureThreshold = 3
 			}
-			pro := &corev1.Probe{
+			pro := &libv1.Probe{
 				TimeoutSeconds:   port.TimeoutSeconds,
 				SuccessThreshold: port.SuccessThreshold,
 				FailureThreshold: port.FailureThreshold,
 			}
 			if port.HTTPGet != nil {
-				pro.HTTPGet = &corev1.HTTPGetAction{
+				pro.HTTPGet = &libv1.HTTPGetAction{
 					Path:        port.HTTPGet.Path,
 					Port:        intstr.FromInt(int(port.TargetPort)),
 					Host:        host,
@@ -174,7 +175,7 @@ func healthyCheck(host string, cep *v1beta1.ClusterEndpoint) ([]v1beta1.ServiceP
 				}
 			}
 			if port.UDPSocket != nil && port.UDPSocket.Enable {
-				pro.TCPSocket = &corev1.TCPSocketAction{
+				pro.TCPSocket = &libv1.TCPSocketAction{
 					Port: intstr.FromInt(int(port.TargetPort)),
 					Host: host,
 				}
@@ -182,14 +183,14 @@ func healthyCheck(host string, cep *v1beta1.ClusterEndpoint) ([]v1beta1.ServiceP
 			network := ""
 			if port.TCPSocket != nil && port.TCPSocket.Enable {
 				network = "tcp"
-				pro.TCPSocket = &corev1.TCPSocketAction{
+				pro.TCPSocket = &libv1.TCPSocketAction{
 					Port: intstr.FromInt(int(port.TargetPort)),
 					Host: host,
 				}
 			}
 			if port.UDPSocket != nil && port.UDPSocket.Enable {
 				network = "udp"
-				pro.TCPSocket = &corev1.TCPSocketAction{
+				pro.TCPSocket = &libv1.TCPSocketAction{
 					Port: intstr.FromInt(int(port.TargetPort)),
 					Host: host,
 				}
