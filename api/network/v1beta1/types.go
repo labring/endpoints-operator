@@ -97,10 +97,6 @@ type Handler struct {
 	// TCP hooks not yet supported
 	// +optional
 	TCPSocket *TCPSocketAction `json:"tcpSocket,omitempty" protobuf:"bytes,3,opt,name=tcpSocket"`
-	// UDPSocket specifies an action involving a UDP port.
-	// UDP hooks not yet supported
-	// +optional
-	UDPSocket *UDPSocketAction `json:"udpSocket,omitempty" protobuf:"bytes,4,opt,name=tcpSocket"`
 }
 
 // ClusterEndpointSpec defines the desired state of ClusterEndpoint

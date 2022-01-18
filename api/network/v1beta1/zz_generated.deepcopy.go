@@ -189,11 +189,6 @@ func (in *Handler) DeepCopyInto(out *Handler) {
 		*out = new(TCPSocketAction)
 		**out = **in
 	}
-	if in.UDPSocket != nil {
-		in, out := &in.UDPSocket, &out.UDPSocket
-		*out = new(UDPSocketAction)
-		**out = **in
-	}
 	return
 }
 
