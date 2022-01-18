@@ -179,13 +179,22 @@ func healthyCheck(host string, cep *v1beta1.ClusterEndpoint) ([]v1beta1.ServiceP
 					Host: host,
 				}
 			}
+			network := ""
 			if port.TCPSocket != nil && port.TCPSocket.Enable {
+				network = "tcp"
 				pro.TCPSocket = &corev1.TCPSocketAction{
 					Port: intstr.FromInt(int(port.TargetPort)),
 					Host: host,
 				}
 			}
-			w := &work{p: pro}
+			if port.TCPSocket != nil && port.TCPSocket.Enable {
+				network = "udp"
+				pro.TCPSocket = &corev1.TCPSocketAction{
+					Port: intstr.FromInt(int(port.TargetPort)),
+					Host: host,
+				}
+			}
+			w := &work{p: pro, network: network}
 			for w.doProbe() {
 			}
 			mx.Lock()

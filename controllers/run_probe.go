@@ -24,6 +24,7 @@ import (
 	execprobe "github.com/sealyun/endpoints-operator/library/probe/exec"
 	httpprobe "github.com/sealyun/endpoints-operator/library/probe/http"
 	tcpprobe "github.com/sealyun/endpoints-operator/library/probe/tcp"
+	udpprobe "github.com/sealyun/endpoints-operator/library/probe/udp"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	urutime "k8s.io/apimachinery/pkg/util/runtime"
@@ -38,17 +39,18 @@ import (
 
 type work struct {
 	p          *v1.Probe
+	network    string
 	resultRun  int
 	lastResult probe.Result
 	err        error
 }
 
-func (pb *prober) runProbeWithRetries(p *v1.Probe, retries int) (probe.Result, string, error) {
+func (pb *prober) runProbeWithRetries(p *v1.Probe, network string, retries int) (probe.Result, string, error) {
 	var err error
 	var result probe.Result
 	var output string
 	for i := 0; i < retries; i++ {
-		result, output, err = pb.runProbe(p)
+		result, output, err = pb.runProbe(p, network)
 		if err == nil {
 			return result, output, nil
 		}
@@ -62,7 +64,7 @@ func (w *work) doProbe() (keepGoing bool) {
 
 	// the full container environment here, OR we must make a call to the CRI in order to get those environment
 	// values from the running container.
-	result, output, err := proberCheck.runProbeWithRetries(w.p, 3)
+	result, output, err := proberCheck.runProbeWithRetries(w.p, w.network, 3)
 	if err != nil {
 		w.err = err
 		return false
@@ -94,6 +96,7 @@ type prober struct {
 	exec execprobe.Prober
 	http httpprobe.Prober
 	tcp  tcpprobe.Prober
+	udp  udpprobe.Prober
 }
 
 var proberCheck = newProber()
@@ -107,10 +110,11 @@ func newProber() *prober {
 		exec: execprobe.New(),
 		http: httpprobe.New(followNonLocalRedirects),
 		tcp:  tcpprobe.New(),
+		udp:  udpprobe.New(),
 	}
 }
 
-func (pb *prober) runProbe(p *v1.Probe) (probe.Result, string, error) {
+func (pb *prober) runProbe(p *v1.Probe, network string) (probe.Result, string, error) {
 	timeout := time.Duration(p.TimeoutSeconds) * time.Second
 	if p.Exec != nil {
 		klog.V(4).Infof("Exec-Probe Command: %v", p.Exec.Command)
@@ -137,8 +141,13 @@ func (pb *prober) runProbe(p *v1.Probe) (probe.Result, string, error) {
 			return probe.Unknown, "", err
 		}
 		host := p.TCPSocket.Host
-		klog.V(4).Infof("TCP-Probe Host: %v, Port: %v, Timeout: %v", host, port, timeout)
-		return pb.tcp.Probe(host, port, timeout)
+		if network == "tcp" {
+			klog.V(4).Infof("TCP-Probe Host: %v, Port: %v, Timeout: %v", host, port, timeout)
+			return pb.tcp.Probe(host, port, timeout)
+		} else {
+			klog.V(4).Infof("UDP-Probe Host: %v, Port: %v, Timeout: %v", host, port, timeout)
+			return pb.udp.Probe(host, port, timeout)
+		}
 	}
 	klog.Warning("failed to find probe builder")
 	return probe.Warning, "", nil
