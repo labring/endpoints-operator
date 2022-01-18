@@ -187,7 +187,7 @@ func healthyCheck(host string, cep *v1beta1.ClusterEndpoint) ([]v1beta1.ServiceP
 					Host: host,
 				}
 			}
-			if port.TCPSocket != nil && port.TCPSocket.Enable {
+			if port.UDPSocket != nil && port.UDPSocket.Enable {
 				network = "udp"
 				pro.TCPSocket = &corev1.TCPSocketAction{
 					Port: intstr.FromInt(int(port.TargetPort)),
