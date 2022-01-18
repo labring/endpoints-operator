@@ -142,9 +142,8 @@ spec:
                       format: int32
                       type: integer
                     tcpSocket:
-                      description: 'TCPSocket specifies an action involving a TCP
-                        port. TCP hooks not yet supported TODO: implement a realistic
-                        TCP lifecycle hook'
+                      description: TCPSocket specifies an action involving a TCP port.
+                        TCP hooks not yet supported
                       properties:
                         enable:
                           type: boolean
@@ -157,6 +156,15 @@ spec:
                         https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes'
                       format: int32
                       type: integer
+                    udpSocket:
+                      description: UDPSocket specifies an action involving a UDP port.
+                        UDP hooks not yet supported
+                      properties:
+                        enable:
+                          type: boolean
+                      required:
+                      - enable
+                      type: object
                   required:
                   - port
                   - targetPort
