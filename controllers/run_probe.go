@@ -25,7 +25,6 @@ import (
 	execprobe "github.com/sealyun/endpoints-operator/library/probe/exec"
 	httpprobe "github.com/sealyun/endpoints-operator/library/probe/http"
 	tcpprobe "github.com/sealyun/endpoints-operator/library/probe/tcp"
-	udpprobe "github.com/sealyun/endpoints-operator/library/probe/udp"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	urutime "k8s.io/apimachinery/pkg/util/runtime"
@@ -97,7 +96,6 @@ type prober struct {
 	exec execprobe.Prober
 	http httpprobe.Prober
 	tcp  tcpprobe.Prober
-	udp  udpprobe.Prober
 }
 
 var proberCheck = newProber()
@@ -111,7 +109,6 @@ func newProber() *prober {
 		exec: execprobe.New(),
 		http: httpprobe.New(followNonLocalRedirects),
 		tcp:  tcpprobe.New(),
-		udp:  udpprobe.New(),
 	}
 }
 
@@ -145,9 +142,6 @@ func (pb *prober) runProbe(p *libv1.Probe, network string) (probe.Result, string
 		if network == "tcp" {
 			klog.V(4).Infof("TCP-Probe Host: %v, Port: %v, Timeout: %v", host, port, timeout)
 			return pb.tcp.Probe(host, port, timeout)
-		} else {
-			klog.V(4).Infof("UDP-Probe Host: %v, Port: %v, Timeout: %v", host, port, timeout)
-			return pb.udp.Probe(host, port, timeout)
 		}
 	}
 	klog.Warning("failed to find probe builder")
