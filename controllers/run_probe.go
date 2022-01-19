@@ -23,6 +23,7 @@ import (
 	libv1 "github.com/sealyun/endpoints-operator/library/api/core/v1"
 	"github.com/sealyun/endpoints-operator/library/probe"
 	execprobe "github.com/sealyun/endpoints-operator/library/probe/exec"
+	grpcprobe "github.com/sealyun/endpoints-operator/library/probe/grpc"
 	httpprobe "github.com/sealyun/endpoints-operator/library/probe/http"
 	tcpprobe "github.com/sealyun/endpoints-operator/library/probe/tcp"
 	v1 "k8s.io/api/core/v1"
@@ -96,6 +97,7 @@ type prober struct {
 	exec execprobe.Prober
 	http httpprobe.Prober
 	tcp  tcpprobe.Prober
+	grpc grpcprobe.Prober
 }
 
 var proberCheck = newProber()
@@ -109,6 +111,7 @@ func newProber() *prober {
 		exec: execprobe.New(),
 		http: httpprobe.New(followNonLocalRedirects),
 		tcp:  tcpprobe.New(),
+		grpc: grpcprobe.New(),
 	}
 }
 
@@ -143,6 +146,12 @@ func (pb *prober) runProbe(p *libv1.Probe, network string) (probe.Result, string
 			klog.V(4).Infof("TCP-Probe Host: %v, Port: %v, Timeout: %v", host, port, timeout)
 			return pb.tcp.Probe(host, port, timeout)
 		}
+	}
+	if p.GRPC != nil {
+		host := &(p.GRPC.Host)
+		service := p.GRPC.Service
+		klog.V(4).Info("GRPC-Probe Host: %v,Service: %v, Port: %v, Timeout: %v", host, service, p.GRPC.Port, timeout)
+		return pb.grpc.Probe(*host, *service, int(p.GRPC.Port), timeout)
 	}
 	klog.Warning("failed to find probe builder")
 	return probe.Warning, "", nil

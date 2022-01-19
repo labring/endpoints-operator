@@ -82,6 +82,18 @@ spec:
                         value is 1.
                       format: int32
                       type: integer
+                    grpc:
+                      description: GRPC specifies an action involving a GRPC port.
+                        This is an alpha field and requires enabling GRPCContainerProbe
+                        feature gate.
+                      properties:
+                        service:
+                          description: "Service is the name of the service to place
+                            in the gRPC HealthCheckRequest (see https://github.com/grpc/grpc/blob/master/doc/health-checking.md).
+                            \n If this is not specified, the default behavior is defined
+                            by gRPC."
+                          type: string
+                      type: object
                     httpGet:
                       description: HTTPGet specifies the http request to perform.
                       properties:

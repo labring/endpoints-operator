@@ -174,12 +174,18 @@ func healthyCheck(host string, cep *v1beta1.ClusterEndpoint) ([]v1beta1.ServiceP
 					HTTPHeaders: port.HTTPGet.HTTPHeaders,
 				}
 			}
-			network := ""
+			network := "tcp"
 			if port.TCPSocket != nil && port.TCPSocket.Enable {
-				network = "tcp"
 				pro.TCPSocket = &libv1.TCPSocketAction{
 					Port: intstr.FromInt(int(port.TargetPort)),
 					Host: host,
+				}
+			}
+			if port.GRPC != nil {
+				pro.GRPC = &libv1.GRPCAction{
+					Port:    port.TargetPort,
+					Host:    host,
+					Service: port.GRPC.Service,
 				}
 			}
 			w := &work{p: pro, network: network}

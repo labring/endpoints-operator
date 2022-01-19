@@ -22,13 +22,13 @@ import (
 	"fmt"
 	"github.com/sealyun/endpoints-operator/library/io"
 	"github.com/sealyun/endpoints-operator/library/probe"
+	"github.com/sealyun/endpoints-operator/library/version"
 	"k8s.io/klog"
 	"net/http"
 	"net/url"
 	"time"
 
 	utilnet "k8s.io/apimachinery/pkg/util/net"
-	"k8s.io/component-base/version"
 )
 
 const (
@@ -99,7 +99,7 @@ func DoHTTPProbe(url *url.URL, headers http.Header, client GetHTTPInterface) (pr
 		}
 		// explicitly set User-Agent so it's not set to default Go value
 		v := version.Get()
-		headers.Set("User-Agent", fmt.Sprintf("kube-probe/%s.%s", v.Major, v.Minor))
+		headers.Set("User-Agent", fmt.Sprintf("kube-probe/%s", v.GitVersion))
 	}
 	if _, ok := headers["Accept"]; !ok {
 		// Accept header was not defined. accept all
