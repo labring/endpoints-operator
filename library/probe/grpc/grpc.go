@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/sealyun/endpoints-operator/library/probe"
+	"github.com/sealyun/endpoints-operator/library/version"
 	"net"
 	"time"
 
@@ -28,7 +29,6 @@ import (
 	grpchealth "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
-	"k8s.io/component-base/version"
 )
 
 // Prober is an interface that defines the Probe function for doing GRPC readiness/liveness/startup checks.
@@ -52,7 +52,7 @@ func (p grpcProber) Probe(host, service string, port int, timeout time.Duration)
 	v := version.Get()
 
 	opts := []grpc.DialOption{
-		grpc.WithUserAgent(fmt.Sprintf("kube-probe/%s.%s", v.Major, v.Minor)),
+		grpc.WithUserAgent(fmt.Sprintf("kube-probe/%s", v.GitVersion)),
 		grpc.WithBlock(),
 		grpc.WithInsecure(), //credentials are currently not supported
 	}

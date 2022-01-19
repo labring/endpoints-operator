@@ -69,11 +69,6 @@ type TCPSocketAction struct {
 	Enable bool `json:"enable" protobuf:"bytes,1,opt,name=enable"`
 }
 
-// UDPSocketAction describes an action based on opening a socket
-type UDPSocketAction struct {
-	Enable bool `json:"enable" protobuf:"bytes,1,opt,name=enable"`
-}
-
 // HTTPGetAction describes an action based on HTTP Get requests.
 type HTTPGetAction struct {
 	// Path to access on the HTTP server.
@@ -88,6 +83,16 @@ type HTTPGetAction struct {
 	HTTPHeaders []v1.HTTPHeader `json:"httpHeaders,omitempty" protobuf:"bytes,5,rep,name=httpHeaders"`
 }
 
+type GRPCAction struct {
+	// Service is the name of the service to place in the gRPC HealthCheckRequest
+	// (see https://github.com/grpc/grpc/blob/master/doc/health-checking.md).
+	//
+	// If this is not specified, the default behavior is defined by gRPC.
+	// +optional
+	// +default=""
+	Service *string `json:"service" protobuf:"bytes,1,opt,name=service"`
+}
+
 // Handler defines a specific action that should be taken
 type Handler struct {
 	// HTTPGet specifies the http request to perform.
@@ -97,6 +102,10 @@ type Handler struct {
 	// TCP hooks not yet supported
 	// +optional
 	TCPSocket *TCPSocketAction `json:"tcpSocket,omitempty" protobuf:"bytes,3,opt,name=tcpSocket"`
+	// GRPC specifies an action involving a GRPC port.
+	// This is an alpha field and requires enabling GRPCContainerProbe feature gate.
+	// +optional
+	GRPC *GRPCAction `json:"grpc,omitempty" protobuf:"bytes,4,opt,name=grpc"`
 }
 
 // ClusterEndpointSpec defines the desired state of ClusterEndpoint

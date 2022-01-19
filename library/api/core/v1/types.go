@@ -73,6 +73,9 @@ type GRPCAction struct {
 	// +optional
 	// +default=""
 	Service *string `json:"service" protobuf:"bytes,2,opt,name=service"`
+	// Optional: Host name to connect to, defaults to the pod IP.
+	// +optional
+	Host string `json:"host,omitempty" protobuf:"bytes,3,opt,name=host"`
 }
 
 // ExecAction describes a "run in container" action.

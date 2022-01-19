@@ -1,17 +1,3 @@
-# Copyright © 2022 The sealyun Authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 
 ---
 apiVersion: apiextensions.k8s.io/v1
@@ -82,6 +68,18 @@ spec:
                         value is 1.
                       format: int32
                       type: integer
+                    grpc:
+                      description: GRPC specifies an action involving a GRPC port.
+                        This is an alpha field and requires enabling GRPCContainerProbe
+                        feature gate.
+                      properties:
+                        service:
+                          description: "Service is the name of the service to place
+                            in the gRPC HealthCheckRequest (see https://github.com/grpc/grpc/blob/master/doc/health-checking.md).
+                            \n If this is not specified, the default behavior is defined
+                            by gRPC."
+                          type: string
+                      type: object
                     httpGet:
                       description: HTTPGet specifies the http request to perform.
                       properties:
