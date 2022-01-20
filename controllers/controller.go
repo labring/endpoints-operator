@@ -18,6 +18,8 @@ package controllers
 
 import (
 	"context"
+	"time"
+
 	"github.com/go-logr/logr"
 	"github.com/sealyun/endpoints-operator/api/network/v1beta1"
 	"github.com/sealyun/endpoints-operator/library/controller"
@@ -34,7 +36,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
-	"time"
 )
 
 const (
@@ -52,8 +53,7 @@ type Reconciler struct {
 	WorkNum    int
 }
 
-func (r *Reconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	rootCtx := context.Background()
+func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	r.Logger.V(4).Info("start reconcile for ceps")
 	ceps := &v1beta1.ClusterEndpoint{}
 	ctr := controller.Controller{
@@ -69,7 +69,7 @@ func (r *Reconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 	ceps.APIVersion = ctr.Gvk.GroupVersion().String()
 	ceps.Kind = ctr.Gvk.Kind
-	return ctr.Run(rootCtx, req, ceps)
+	return ctr.Run(ctx, req, ceps)
 }
 
 func (c *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
@@ -91,7 +91,7 @@ func (c *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&v1beta1.ClusterEndpoint{}).Complete(c)
 }
 
-func (c *Reconciler) Update(ctx context.Context, req ctrl.Request, gvk schema.GroupVersionKind, obj runtime.Object) (ctrl.Result, error) {
+func (c *Reconciler) Update(ctx context.Context, req ctrl.Request, gvk schema.GroupVersionKind, obj client.Object) (ctrl.Result, error) {
 	c.Logger.V(4).Info("update reconcile controller service", "request", req)
 	cep := &v1beta1.ClusterEndpoint{}
 	err := convert.JsonConvert(obj, cep)
@@ -131,6 +131,6 @@ func (c *Reconciler) UpdateStatus(ctx context.Context, req ctrl.Request, cep *v1
 	return ctrl.Result{RequeueAfter: sec}, nil
 }
 
-func (c *Reconciler) Delete(ctx context.Context, req ctrl.Request, gvk schema.GroupVersionKind, obj runtime.Object) error {
+func (c *Reconciler) Delete(ctx context.Context, req ctrl.Request, gvk schema.GroupVersionKind, obj client.Object) error {
 	return nil
 }

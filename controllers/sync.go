@@ -19,6 +19,8 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"sync"
+
 	"github.com/sealyun/endpoints-operator/api/network/v1beta1"
 	libv1 "github.com/sealyun/endpoints-operator/library/api/core/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -26,7 +28,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sync"
 )
 
 func (c *Reconciler) syncService(ctx context.Context, cep *v1beta1.ClusterEndpoint) {
