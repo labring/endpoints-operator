@@ -35,9 +35,9 @@ type Options struct {
 func NewOptions() *Options {
 	s := &Options{
 		LeaderElection: &leaderelection.LeaderElectionConfig{
-			LeaseDuration: 30 * time.Second,
-			RenewDeadline: 15 * time.Second,
-			RetryPeriod:   5 * time.Second,
+			LeaseDuration: 15 * time.Second,
+			RenewDeadline: 10 * time.Second,
+			RetryPeriod:   2 * time.Second,
 		},
 		LeaderElect: false,
 	}
