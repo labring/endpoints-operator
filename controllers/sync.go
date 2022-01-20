@@ -175,11 +175,17 @@ func healthyCheck(host string, cep *v1beta1.ClusterEndpoint, retry int) ([]v1bet
 					HTTPHeaders: port.HTTPGet.HTTPHeaders,
 				}
 			}
-			network := "tcp"
 			if port.TCPSocket != nil && port.TCPSocket.Enable {
 				pro.TCPSocket = &libv1.TCPSocketAction{
 					Port: intstr.FromInt(int(port.TargetPort)),
 					Host: host,
+				}
+			}
+			if port.UDPSocket != nil && port.UDPSocket.Enable {
+				pro.UDPSocket = &libv1.UDPSocketAction{
+					Port: intstr.FromInt(int(port.TargetPort)),
+					Host: host,
+					Data: port.UDPSocket.Data,
 				}
 			}
 			if port.GRPC != nil {
@@ -189,7 +195,7 @@ func healthyCheck(host string, cep *v1beta1.ClusterEndpoint, retry int) ([]v1bet
 					Service: port.GRPC.Service,
 				}
 			}
-			w := &work{p: pro, network: network, retry: retry}
+			w := &work{p: pro, retry: retry}
 			for w.doProbe() {
 			}
 			mx.Lock()
