@@ -16,6 +16,7 @@ package options
 
 import (
 	"flag"
+	"k8s.io/client-go/tools/leaderelection/resourcelock"
 	"strings"
 	"time"
 
@@ -26,10 +27,11 @@ import (
 )
 
 type Options struct {
-	LeaderElect    bool
-	LeaderElection *leaderelection.LeaderElectionConfig
-	MaxConcurrent  int
-	MaxRetry       int
+	LeaderElect                bool
+	LeaderElection             *leaderelection.LeaderElectionConfig
+	LeaderElectionResourceLock string
+	MaxConcurrent              int
+	MaxRetry                   int
 }
 
 func NewOptions() *Options {
@@ -93,4 +95,7 @@ func (s *Options) bindLeaderElectionFlags(l *leaderelection.LeaderElectionConfig
 	fs.DurationVar(&l.RetryPeriod, "leader-elect-retry-period", l.RetryPeriod, ""+
 		"The duration the clients should wait between attempting acquisition and renewal "+
 		"of a leadership. This is only applicable if leader election is enabled.")
+	fs.StringVar(&s.LeaderElectionResourceLock, "leader-elect-resource-lock", resourcelock.ConfigMapsLeasesResourceLock,
+		"Leader election resource lock, support: endpoints,configmaps,leases,endpointsleases,configmapsleases")
+
 }

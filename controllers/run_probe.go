@@ -20,6 +20,13 @@ package controllers
 import (
 	"errors"
 	"fmt"
+	"net"
+	"net/http"
+	"net/url"
+	"strconv"
+	"strings"
+	"time"
+
 	libv1 "github.com/sealyun/endpoints-operator/library/api/core/v1"
 	"github.com/sealyun/endpoints-operator/library/probe"
 	execprobe "github.com/sealyun/endpoints-operator/library/probe/exec"
@@ -30,12 +37,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	urutime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/klog"
-	"net"
-	"net/http"
-	"net/url"
-	"strconv"
-	"strings"
-	"time"
 )
 
 type work struct {

@@ -17,21 +17,16 @@ package controller
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/go-logr/logr"
 	"github.com/sealyun/endpoints-operator/library/convert"
-	"github.com/sealyun/endpoints-operator/library/tools"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/tools/record"
-	"k8s.io/client-go/util/retry"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"strings"
 )
 
 type Controller struct {
@@ -46,19 +41,16 @@ type Controller struct {
 var WaitDelete = fmt.Errorf("wait delete resource")
 
 type Operator interface {
-	Update(ctx context.Context, req ctrl.Request, gvk schema.GroupVersionKind, obj runtime.Object) (ctrl.Result, error)
-	Delete(ctx context.Context, req ctrl.Request, gvk schema.GroupVersionKind, obj runtime.Object) error
+	Update(ctx context.Context, req ctrl.Request, gvk schema.GroupVersionKind, obj client.Object) (ctrl.Result, error)
+	Delete(ctx context.Context, req ctrl.Request, gvk schema.GroupVersionKind, obj client.Object) error
 }
 
 func (r *Controller) GroupVersionKind() schema.GroupVersionKind {
 	return r.Gvk
 }
-func (r *Controller) Run(ctx context.Context, req ctrl.Request, obj runtime.Object) (ctrl.Result, error) {
+func (r *Controller) Run(ctx context.Context, req ctrl.Request, obj client.Object) (ctrl.Result, error) {
 	lowerKind := strings.ToLower(r.Gvk.Kind)
 	if err := r.Get(ctx, req.NamespacedName, obj); err != nil {
-		if errors.IsNotFound(err) {
-			return reconcile.Result{}, nil
-		}
 		//
 		// we'll ignore not-found errors, since they can't be fixed by an immediate
 		// requeue (we'll need to wait for a new notification), and we can get them
@@ -74,16 +66,11 @@ func (r *Controller) Run(ctx context.Context, req ctrl.Request, obj runtime.Obje
 		// The object is not being deleted, so if it does not have our finalizer,
 		// then lets add the finalizer and update the object. This is equivalent
 		// registering our finalizer.
-		if err = controllerutil.AddFinalizerWithError(ustructObj, r.FinalizerName); err != nil {
-			r.Eventer.Eventf(obj, corev1.EventTypeWarning, "FailedUpdate", "Update %s: %v", lowerKind, err)
-			//如果修改失败重新放入队列
-			r.Logger.Error(err, "unable to set finalizer", "finalizer", r.FinalizerName)
-			return ctrl.Result{Requeue: true}, err
-		}
+		controllerutil.AddFinalizer(ustructObj, r.FinalizerName)
 		return r.Operator.Update(ctx, req, r.Gvk, ustructObj)
 	} else {
 		// The object is being deleted
-		if tools.ContainsString(ustructObj.GetFinalizers(), r.FinalizerName) {
+		if controllerutil.ContainsFinalizer(ustructObj, r.FinalizerName) {
 			// our finalizer is present, so lets handle any external dependency
 			if err = r.Operator.Delete(ctx, req, r.Gvk, ustructObj); err != nil {
 				// if fail to delete the external dependency here, return with error
@@ -97,35 +84,9 @@ func (r *Controller) Run(ctx context.Context, req ctrl.Request, obj runtime.Obje
 				//如果修改失败重新放入队列
 				return ctrl.Result{Requeue: true}, err
 			}
-			// remove our finalizer from the list and update it.
-			if err = controllerutil.RemoveFinalizerWithError(ustructObj, r.FinalizerName); err != nil {
-				r.Eventer.Eventf(obj, corev1.EventTypeWarning, "FailedDelete", "Deleted %s: %v", lowerKind, err)
-				r.Logger.Error(err, "failed set finalizer the resource", "err", err.Error())
-				return ctrl.Result{Requeue: true}, err
-			}
+			controllerutil.RemoveFinalizer(ustructObj, r.FinalizerName)
 		}
 		// Stop reconciliation as the item is being deleted
 		return ctrl.Result{}, nil
 	}
-}
-
-func (r *Controller) setFinalizers(ctx context.Context, req ctrl.Request, obj runtime.Object, finalizers []string) error {
-	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		gvk := obj.GetObjectKind().GroupVersionKind()
-		fetchObject := &unstructured.Unstructured{}
-		fetchObject.SetAPIVersion(gvk.GroupVersion().String())
-		fetchObject.SetKind(gvk.Kind)
-		err := r.Client.Get(ctx, req.NamespacedName, fetchObject)
-		if err != nil {
-			// We log this error, but we continue and try to set the ownerRefs on the other resources.
-			return err
-		}
-		fetchObject.SetFinalizers(finalizers)
-		err = r.Client.Update(ctx, fetchObject)
-		if err != nil {
-			// We log this error, but we continue and try to set the ownerRefs on the other resources.
-			return err
-		}
-		return nil
-	})
 }
