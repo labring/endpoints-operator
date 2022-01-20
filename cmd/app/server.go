@@ -15,9 +15,10 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"github.com/sealyun/endpoints-operator/controllers"
-	"k8s.io/apiserver/pkg/util/term"
+	"k8s.io/component-base/term"
 	"net/http"
 	"os"
 
@@ -77,16 +78,17 @@ func NewCommand() *cobra.Command {
 	return cmd
 }
 
-func run(s *options.Options, stopCh <-chan struct{}) error {
+func run(s *options.Options, ctx context.Context) error {
 	mgrOptions := manager.Options{}
 	if s.LeaderElect {
 		mgrOptions = manager.Options{
-			LeaderElection:          s.LeaderElect,
-			LeaderElectionNamespace: "kube-system",
-			LeaderElectionID:        "sealyun-endpoints-operator-leader-election",
-			LeaseDuration:           &s.LeaderElection.LeaseDuration,
-			RetryPeriod:             &s.LeaderElection.RetryPeriod,
-			RenewDeadline:           &s.LeaderElection.RenewDeadline,
+			LeaderElection:             s.LeaderElect,
+			LeaderElectionNamespace:    "kube-system",
+			LeaderElectionID:           "sealyun-endpoints-operator-leader-election",
+			LeaderElectionResourceLock: s.LeaderElectionResourceLock,
+			LeaseDuration:              &s.LeaderElection.LeaseDuration,
+			RetryPeriod:                &s.LeaderElection.RetryPeriod,
+			RenewDeadline:              &s.LeaderElection.RenewDeadline,
 		}
 	}
 	mgrOptions.Scheme = scheme
@@ -133,7 +135,7 @@ func run(s *options.Options, stopCh <-chan struct{}) error {
 		klog.Fatal(err, "problem running manager readiness check")
 	}
 
-	if err = mgr.Start(stopCh); err != nil {
+	if err = mgr.Start(ctx); err != nil {
 		klog.Fatalf("unable to run the manager: %v", err)
 	}
 	return nil
