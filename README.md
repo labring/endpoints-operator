@@ -55,36 +55,44 @@ spec:
     - 172.18.191.215
   periodSeconds: 10
   ports:
-    - failureThreshold: 3
-      name: https
-      port: 38082
+    - name: wp-https
       protocol: TCP
-      successThreshold: 1
-      targetPort: 80
+      port: 38081
+      targetPort: 443
       tcpSocket:
         enable: true
       timeoutSeconds: 1
-    - httpGet:
-        path: /
-        scheme: http
-      name: http
-      port: 38081
+      failureThreshold: 3
+      successThreshold: 1
+    - name: wp-http
       protocol: TCP
+      port: 38082
       targetPort: 80
-    - name: udp
-      port: 90
+      httpGet:
+        path: /healthz
+        scheme: http
+      timeoutSeconds: 1
+      failureThreshold: 3
+      successThreshold: 1      
+    - name: wp-udp
       protocol: UDP
-      targetPort: 80
+      port: 38003
+      targetPort: 1234
       udpSocket:
         enable: true
-        data: "aa"
-    - name: grpc
-      port: 80
-      targetPort: 80
-      protocol: UDP
+        data: "This is flag data for UDP svc test"
+      timeoutSeconds: 1
+      failureThreshold: 3
+      successThreshold: 1
+    - name: wp-grpc
+      protocol: TCP
+      port: 38083
+      targetPort: 8080
       grpc:
         enable: true
-        service: "aa"
+      timeoutSeconds: 1
+      failureThreshold: 3
+      successThreshold: 1
 ```
 
 ## 总结

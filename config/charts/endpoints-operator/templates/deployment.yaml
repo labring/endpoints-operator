@@ -53,12 +53,14 @@ spec:
             - "{{ .Values.maxconcurrent }}"
             - --maxretry
             - "{{ .Values.maxretry }}"
+            - --metricsaddr
+            - "{{ .Values.metricsaddr }}"
           ports:
             - name: health
               containerPort: 8080
               protocol: TCP
             - name: metrics
-              containerPort: 9090
+              containerPort: "{{ .Values.metricsaddr }}"
               protocol: TCP
           readinessProbe:
             initialDelaySeconds: 10

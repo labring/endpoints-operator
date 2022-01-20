@@ -31,6 +31,7 @@ nameOverride: ""
 fullnameOverride: ""
 maxconcurrent: 1
 maxretry: 1
+metricsaddr: ":9090"
 
 podAnnotations: {}
 

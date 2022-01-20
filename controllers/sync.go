@@ -92,15 +92,25 @@ func (c *Reconciler) syncEndpoint(ctx context.Context, cep *v1beta1.ClusterEndpo
 			e := make([]error, 0)
 			for _, h := range cep.Spec.Hosts {
 				healthyPorts, errors := healthyCheck(h, cep, c.RetryCount)
+				// do healthy check, add metrics at this action.
+				c.MetricsInfo.RecordCheck(cep.Name, cep.Namespace)
 				if len(healthyPorts) > 0 {
 					healthyHosts = append(healthyHosts, healthyHostAndPort{
 						sps:  healthyPorts,
 						host: h,
 					})
+					// metrics: healthy check successful
+					c.MetricsInfo.RecordSuccessfulCheck(cep.Name, cep.Namespace)
+					// metrics: num of check per time
+					//c.MetricsInfo.RecordCheckDuration(cep.Name, float64())
+				} else {
+					// metrics: healthy check failed
+					c.MetricsInfo.RecordFailedCheck(cep.Name, cep.Namespace)
 				}
 				subErr := ToAggregate(errors)
 				if subErr != nil && len(subErr.Errors()) != 0 {
 					e = append(e, fmt.Errorf(subErr.Error()))
+
 				}
 
 			}
