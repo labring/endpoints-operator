@@ -90,7 +90,7 @@ func (c *Reconciler) syncEndpoint(ctx context.Context, cep *v1beta1.ClusterEndpo
 			healthyHosts := make([]healthyHostAndPort, 0)
 			e := make([]error, 0)
 			for _, h := range cep.Spec.Hosts {
-				healthyPorts, errors := healthyCheck(h, cep)
+				healthyPorts, errors := healthyCheck(h, cep, c.RetryCount)
 				if len(healthyPorts) > 0 {
 					healthyHosts = append(healthyHosts, healthyHostAndPort{
 						sps:  healthyPorts,
@@ -141,7 +141,7 @@ func (c *Reconciler) syncEndpoint(ctx context.Context, cep *v1beta1.ClusterEndpo
 	}
 }
 
-func healthyCheck(host string, cep *v1beta1.ClusterEndpoint) ([]v1beta1.ServicePort, []error) {
+func healthyCheck(host string, cep *v1beta1.ClusterEndpoint, retry int) ([]v1beta1.ServicePort, []error) {
 	var wg sync.WaitGroup
 	var mx sync.Mutex
 	var data []v1beta1.ServicePort
@@ -188,7 +188,7 @@ func healthyCheck(host string, cep *v1beta1.ClusterEndpoint) ([]v1beta1.ServiceP
 					Service: port.GRPC.Service,
 				}
 			}
-			w := &work{p: pro, network: network}
+			w := &work{p: pro, network: network, retry: retry}
 			for w.doProbe() {
 			}
 			mx.Lock()

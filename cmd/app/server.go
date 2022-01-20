@@ -46,7 +46,7 @@ func NewCommand() *cobra.Command {
 	}
 
 	cmd := &cobra.Command{
-		Use:  "controller-manager",
+		Use:  "endpoints-operator",
 		Long: `endpoints-operator controller manager is a daemon that`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if errs := s.Validate(); len(errs) != 0 {
@@ -99,7 +99,8 @@ func run(s *options.Options, stopCh <-chan struct{}) error {
 	if err != nil {
 		klog.Fatalf("unable to set up overall controller manager: %v", err)
 	}
-	klog.V(0).Info("[****] MaxConcurrent value is ", s.MaxConcurrent)
+	klog.V(4).Info("[****] MaxConcurrent value is ", s.MaxConcurrent)
+	klog.V(4).Info("[****] MaxRetry value is ", s.MaxRetry)
 
 	controllers.Install(scheme)
 	clusterReconciler := &controllers.Reconciler{}
@@ -107,6 +108,11 @@ func run(s *options.Options, stopCh <-chan struct{}) error {
 		clusterReconciler.WorkNum = s.MaxConcurrent
 	} else {
 		clusterReconciler.WorkNum = 1
+	}
+	if s.MaxRetry > 0 {
+		clusterReconciler.RetryCount = s.MaxRetry
+	} else {
+		clusterReconciler.RetryCount = 1
 	}
 
 	if err = clusterReconciler.SetupWithManager(mgr); err != nil {

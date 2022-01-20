@@ -29,6 +29,7 @@ type Options struct {
 	LeaderElect    bool
 	LeaderElection *leaderelection.LeaderElectionConfig
 	MaxConcurrent  int
+	MaxRetry       int
 }
 
 func NewOptions() *Options {
@@ -66,6 +67,8 @@ func (s *Options) Flags() cliflag.NamedFlagSets {
 	// MaxConcurrent this is the maximum number of concurrent Reconciles which can be run. Defaults to 1.
 	mc := fss.FlagSet("worker")
 	mc.IntVar(&s.MaxConcurrent, "maxconcurrent", 1, "MaxConcurrent this is the maximum number of concurrent Reconciles "+
+		"which can be run. Defaults to 1.")
+	mc.IntVar(&s.MaxRetry, "maxretry", 1, "MaxRetry this is the maximum number of retry liveliness "+
 		"which can be run. Defaults to 1.")
 
 	return fss

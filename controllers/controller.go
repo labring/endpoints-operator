@@ -44,12 +44,12 @@ const (
 // Reconciler reconciles a Service object
 type Reconciler struct {
 	client.Client
-	Logger    logr.Logger
-	Recorder  record.EventRecorder
-	cache     cache.Cache
-	scheme    *runtime.Scheme
-	LoopCount int
-	WorkNum   int
+	Logger     logr.Logger
+	Recorder   record.EventRecorder
+	cache      cache.Cache
+	scheme     *runtime.Scheme
+	RetryCount int
+	WorkNum    int
 }
 
 func (r *Reconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {

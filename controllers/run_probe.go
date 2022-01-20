@@ -43,6 +43,7 @@ type work struct {
 	network    string
 	resultRun  int
 	lastResult probe.Result
+	retry      int
 	err        error
 }
 
@@ -65,7 +66,7 @@ func (w *work) doProbe() (keepGoing bool) {
 
 	// the full container environment here, OR we must make a call to the CRI in order to get those environment
 	// values from the running container.
-	result, output, err := proberCheck.runProbeWithRetries(w.p, w.network, 3)
+	result, output, err := proberCheck.runProbeWithRetries(w.p, w.network, w.retry)
 	if err != nil {
 		w.err = err
 		return false
