@@ -30,3 +30,10 @@ spec:
       targetPort: 6443
       tcpSocket:
         enable: true
+    - name: udp-data
+        port: 1234
+        protocol: UDP
+        targetPort: 1234
+        udpSocket:
+          enable: true
+          testData: "testdata"
