@@ -30,6 +30,7 @@ imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 maxconcurrent: 1
+maxretry: 1
 
 podAnnotations: {}
 

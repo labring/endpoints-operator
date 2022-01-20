@@ -49,8 +49,10 @@ spec:
             - --v
             - "{{ .Values.loglevel }}"
             - --leader-elect
-            - --maxconcurrent 
+            - --maxconcurrent
             - "{{ .Values.maxconcurrent }}"
+            - --maxretry
+            - "{{ .Values.maxretry }}"
           ports:
             - name: health
               containerPort: 8080

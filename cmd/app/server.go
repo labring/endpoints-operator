@@ -46,7 +46,7 @@ func NewCommand() *cobra.Command {
 	}
 
 	cmd := &cobra.Command{
-		Use:  "controller-manager",
+		Use:  "endpoints-operator",
 		Long: `endpoints-operator controller manager is a daemon that`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if errs := s.Validate(); len(errs) != 0 {
