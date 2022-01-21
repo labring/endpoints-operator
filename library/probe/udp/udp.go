@@ -17,7 +17,6 @@ limitations under the License.
 package udp
 
 import (
-	"errors"
 	"github.com/sealyun/endpoints-operator/library/probe"
 	"k8s.io/klog"
 	"net"
@@ -58,7 +57,6 @@ func DoUDPProbe(addr string, testData string, timeout time.Duration) (probe.Resu
 	if err != nil {
 		return probe.Failure, err.Error(), nil
 	}
-	defer conn.Close()
 	deadline := time.Now().Add(timeout * time.Second)
 	_ = conn.SetWriteDeadline(deadline)
 	buf := []byte(testData)
@@ -69,13 +67,15 @@ func DoUDPProbe(addr string, testData string, timeout time.Duration) (probe.Resu
 	_ = conn.SetReadDeadline(deadline)
 	bufr := make([]byte, 1024)
 	read, err := conn.Read(bufr)
-
 	if err != nil {
-		klog.Errorf("Unexpected error closing UDP probe socket: %v", err)
-		return probe.Failure, errors.New("io read timout").Error(), nil
+		return probe.Failure, err.Error(), nil
+	}
+	err = conn.Close()
+	if err != nil {
+		klog.Errorf("Unexpected error closing UDP probe socket: %v (%#v)", err, err)
 	}
 	if read > 0 {
-		klog.V(4).Info("recv:", string(bufr[:read]))
+		klog.V(6).Info("recv:", string(bufr[:read]))
 		return probe.Success, "", nil
 	} else {
 		return probe.Failure, "not recv any data", nil
