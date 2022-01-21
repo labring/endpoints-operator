@@ -4,46 +4,42 @@
 
 ## 背景
 
-在实际使用中，两个K8s集群之间的服务经常有互相访问和访问集群外部某些服务的需求，通常的解决方案为写固定的servcie和edpoints或者直接写IP，在这时候，是没有对外部服务的探活功能的，无法做到高可用。如果需要高可用一般是引入外部高可用LB来解决。
+- 在实际使用中，两个K8s集群之间的服务经常有互相访问和访问集群外部某些服务的需求，通常的解决方案为手动维护固定的Services和Endpoints或者直接在业务配置中写死IP，在这时候，是没有对外部服务进行探活的功能的，无法做到高可用。如果需要高可用一般是引入外部高可用LB来解决，但这样增加了复杂度，且好多公司不具备引入条件，不是最优解决方案。
+- 众所周知，Kube-Proxy的主要功能是维护集群内Services和Endpoints并在对应主机上创建对应的IPVS规则。从而达到我们可以在Pod里面通过ClusterIP访问的目的。
 
-本项目利用了K8s原生service功能的ipvs虚IP和负载功能，保证了虚IP本身是高可用的，同时增加了对后端endpoints的定时探活功能，可以在后端endpoints探活失败后从endpoints列表中踢出，保证了svc后端的epdpoints永远是健康的。
+由此，新的想法诞生了: 写一个controller，维护一个CRD来自动创建需要访问的外部服务对应的Service和Endpoint，并对创建的Endpoint中的外部服务数据（IP:PORT列表）进行探活，探活失败则移除对应的外部服务数据。
 
 ## 介绍
 
-endpoints-operator是一个云原生、高可靠性、高性能、面向K8s内部服务访问外部服务的具备探活功能的4层LB
+endpoints-operator是一个云原生、高可靠性、高性能、面向K8s内部服务访问外部服务的具备探活功能的4层LB。
 
 ### 特性
 
-- 云原生
-
-- 声明式管理：Servcie和kubelet探活的定义方式，还是熟悉的语法、熟悉的味道
-
+- 更加贴近云原生
+- 声明式API：探活的定义方式与Kubelet保持一致，还是熟悉的语法、熟悉的味道
 - 高可靠性：原生Service、Endpoint资源，拒绝重复造轮子
-
 - 高性能、高稳定：原生IPVS高性能4层负载均衡
 
   
 
 ### 核心优势
 
-完全使用K8s原生的Service、Endpoint资源，无自定义ipvs策略，依托K8s的service能力，高可靠。
-
-完全兼容已有的自定义service、endpoint资源，可无缝切换至endpoints-operator管理。
-
-声明式管理
-
-通过CRD、controller可管理一个资源即可，无需手动管理service和endpoint两个资源
-
-原生的ipvs4层负载，未引入ingress、nginx、haproxy等LB，满足高性能、和高稳定性的需求
+- 完全使用K8s原生的Service、Endpoint资源，无自定义IPVS策略，依托K8s的Service能力，高可靠。
+- 通过controller管理一个CRD资源ClusterEndpoint（缩写cep）即可，无需手动管理Service和Endpoint两个资源
+- 完全兼容已有的自定义Service、Endpoint资源，可无缝切换至endpoints-operator管理。
+- 原生的IPVS 4层负载，未引入Nginx、HAProxy等LB，降低了复杂度，满足高性能和高稳定性的需求
 
 ### 使用场景
 
-主要使用在集群内部的pod需要访问外边服务的场景，比如数据库、中间件等，通过endpoints-operator的探活能力，可及时将有问题的后端服务剔除，避免受单个宕机副本影响，并可查看status获取后端服务健康状态和探活失败的服务。
+主要使用在集群内部的Pod需要访问外部服务的场景，比如数据库、中间件等，通过endpoints-operator的探活能力，可及时将有问题的后端服务剔除，避免受单个宕机副本影响，并可查看status获取后端服务健康状态和探活失败的服务。
 
 ## 安装
 
 ```bash
-helm install -n <namespce> endpoints-operator config/charts/endpoints-operator
+git clone https://github.com/sealyun/endpoints-operator.git
+cd endpoints-operator 
+checkout v0.1.0
+helm install -n kube-system endpoints-operator config/charts/endpoints-operator
 ```
 
 ## Usage
@@ -52,34 +48,44 @@ helm install -n <namespce> endpoints-operator config/charts/endpoints-operator
 apiVersion: sealyun.com/v1beta1
 kind: ClusterEndpoint
 metadata:
-  name: dmz-kube
+  name: wordpress
+  namespace: default
 spec:
-  clusterIP: 10.96.0.100
-  periodSeconds: 10
   hosts:
-    - 10.0.112.255
+    - 172.18.191.215
+  periodSeconds: 10
   ports:
-    - name: https
-      port: 6443
+    - failureThreshold: 3
+      name: https
+      port: 38082
       protocol: TCP
-      targetPort: 6443
-      timeoutSeconds: 1
       successThreshold: 1
-      failureThreshold: 3
+      targetPort: 80
       tcpSocket:
         enable: true
-    - name: http
-      port: 80
-      protocol: TCP
-      targetPort: 80
-      httpGet:
+      timeoutSeconds: 1
+    - httpGet:
         path: /
         scheme: http
+      name: http
+      port: 38081
+      protocol: TCP
+      targetPort: 80
     - name: udp
-      port: 80
+      port: 90
       protocol: UDP
       targetPort: 80
       udpSocket:
         enable: true
-        data: "testdata"
+        data: "aa"
+    - name: grpc
+      port: 80
+      targetPort: 80
+      protocol: UDP
+      grpc:
+        enable: true
+        service: "aa"
 ```
+
+## 总结
+"endpoints-operator” 的引入，对产品无侵入以及云原生等特性解决了在集群内部访问外部服务等问题。这个思路将会成为以后开发或者运维的标配，也是一个比较完善的项目，从开发的角度换个思路更优雅的去解决一些问题。
