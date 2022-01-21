@@ -1,7 +1,20 @@
+// Copyright © 2022 The sealyun Authors.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package udp
 
 import (
-	"fmt"
 	"github.com/sealyun/endpoints-operator/library/probe"
 	"net"
 	"strings"
@@ -11,7 +24,7 @@ import (
 
 const maxBufferSize = 1024
 
-func udpServer(addr string) {
+func udpServer(t *testing.T, addr string) {
 	listener, err := net.ListenPacket("udp", addr)
 	if err != nil {
 		return
@@ -31,12 +44,12 @@ func udpServer(addr string) {
 			}
 			str1 := string(buffer[:n])
 			if strings.ToLower(str1) == "toerror" {
-				fmt.Println("nothing no send ...")
+				t.Log("nothing no send ...")
 				buffer = []byte{}
 				n = 0
 				break
 			} else {
-				fmt.Printf("packet-received: bytes=%d from=%s\n", n, caddr.String())
+				t.Logf("packet-received: bytes=%d from=%s", n, caddr.String())
 			}
 
 			// write
@@ -53,7 +66,7 @@ func udpServer(addr string) {
 				return
 			}
 
-			fmt.Printf("packet-written: bytes=%d to=%s\n", n, caddr.String())
+			t.Logf("packet-written: bytes=%d to=%s\n", n, caddr.String())
 
 		}
 	}()
@@ -91,8 +104,8 @@ func TestUDPProbe(t *testing.T) {
 		}{addr: "127.0.0.1:38889", testData: "toerror", timeout: 1}, want: probe.Failure, want1: "io read timout", wantErr: false},
 	}
 	// start two udp server
-	go udpServer("127.0.0.1:38888")
-	go udpServer("127.0.0.1:38889")
+	go udpServer(t, "127.0.0.1:38888")
+	go udpServer(t, "127.0.0.1:38889")
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -69,6 +69,14 @@ type TCPSocketAction struct {
 	Enable bool `json:"enable" protobuf:"bytes,1,opt,name=enable"`
 }
 
+// UDPSocketAction describes an action based on opening a socket
+type UDPSocketAction struct {
+	Enable bool `json:"enable" protobuf:"bytes,1,opt,name=enable"`
+	// UDP test data
+	// +optional
+	Data string `json:"data" protobuf:"bytes,2,opt,name=data"`
+}
+
 // HTTPGetAction describes an action based on HTTP Get requests.
 type HTTPGetAction struct {
 	// Path to access on the HTTP server.
@@ -102,10 +110,15 @@ type Handler struct {
 	// TCP hooks not yet supported
 	// +optional
 	TCPSocket *TCPSocketAction `json:"tcpSocket,omitempty" protobuf:"bytes,3,opt,name=tcpSocket"`
+	// UDPSocketAction specifies an action involving a UDP port.
+	// UDP hooks not yet supported
+	// +optional
+	UDPSocket *UDPSocketAction `json:"udpSocket,omitempty" protobuf:"bytes,4,opt,name=udpSocket"`
+
 	// GRPC specifies an action involving a GRPC port.
 	// This is an alpha field and requires enabling GRPCContainerProbe feature gate.
 	// +optional
-	GRPC *GRPCAction `json:"grpc,omitempty" protobuf:"bytes,4,opt,name=grpc"`
+	GRPC *GRPCAction `json:"grpc,omitempty" protobuf:"bytes,5,opt,name=grpc"`
 }
 
 // ClusterEndpointSpec defines the desired state of ClusterEndpoint

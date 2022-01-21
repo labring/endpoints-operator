@@ -168,6 +168,18 @@ spec:
                         https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes'
                       format: int32
                       type: integer
+                    udpSocket:
+                      description: UDPSocketAction specifies an action involving a
+                        UDP port. UDP hooks not yet supported
+                      properties:
+                        data:
+                          description: UDP test data
+                          type: string
+                        enable:
+                          type: boolean
+                      required:
+                      - enable
+                      type: object
                   required:
                   - port
                   - targetPort

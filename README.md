@@ -79,5 +79,7 @@ spec:
       port: 80
       protocol: UDP
       targetPort: 80
-      ###udp暂时不支持探活
+      udpSocket:
+        enable: true
+        data: "testdata"
 ```
