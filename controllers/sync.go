@@ -188,7 +188,7 @@ func healthyCheck(host string, cep *v1beta1.ClusterEndpoint, retry int) ([]v1bet
 					Data: port.UDPSocket.Data,
 				}
 			}
-			if port.GRPC != nil {
+			if port.GRPC != nil && port.GRPC.Enable {
 				pro.GRPC = &libv1.GRPCAction{
 					Port:    port.TargetPort,
 					Host:    host,
