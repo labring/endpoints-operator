@@ -36,4 +36,4 @@ spec:
         targetPort: 1234
         udpSocket:
           enable: true
-          testData: "testdata"
+          data: "testdata"

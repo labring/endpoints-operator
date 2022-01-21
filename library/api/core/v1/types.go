@@ -62,6 +62,19 @@ type TCPSocketAction struct {
 	Host string `json:"host,omitempty" protobuf:"bytes,2,opt,name=host"`
 }
 
+// UDPSocketAction describes an action based on opening a socket
+type UDPSocketAction struct {
+	// Number or name of the port to access on the container.
+	// Number must be in the range 1 to 65535.
+	// Name must be an IANA_SVC_NAME.
+	Port intstr.IntOrString `json:"port" protobuf:"bytes,1,opt,name=port"`
+	// Optional: Host name to connect to, defaults to the pod IP.
+	// +optional
+	Host string `json:"host,omitempty" protobuf:"bytes,2,opt,name=host"`
+	// +optional
+	Data string `json:"data,omitempty" protobuf:"bytes,3,opt,name=host"`
+}
+
 type GRPCAction struct {
 	// Port number of the gRPC service. Number must be in the range 1 to 65535.
 	Port int32 `json:"port" protobuf:"bytes,1,opt,name=port"`
@@ -101,12 +114,15 @@ type ProbeHandler struct {
 	// TCPSocket specifies an action involving a TCP port.
 	// +optional
 	TCPSocket *TCPSocketAction `json:"tcpSocket,omitempty" protobuf:"bytes,3,opt,name=tcpSocket"`
+	// UDPSocket specifies an action involving a UDP port.
+	// +optional
+	UDPSocket *UDPSocketAction `json:"udpSocket,omitempty" protobuf:"bytes,4,opt,name=udpSocket"`
 
 	// GRPC specifies an action involving a GRPC port.
 	// This is an alpha field and requires enabling GRPCContainerProbe feature gate.
 	// +featureGate=GRPCContainerProbe
 	// +optional
-	GRPC *GRPCAction `json:"grpc,omitempty" protobuf:"bytes,4,opt,name=grpc"`
+	GRPC *GRPCAction `json:"grpc,omitempty" protobuf:"bytes,5,opt,name=grpc"`
 }
 
 // Probe describes a health check to be performed against a container to determine whether it is
