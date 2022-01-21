@@ -9,7 +9,7 @@
 - HTTP协议
 
 	- spec.ports部分配置文件：
-ports:
+```ports:
     - name: http
       port: 80
       protocol: TCP
@@ -17,11 +17,11 @@ ports:
       httpGet:
         path: /
         scheme: http
-
+```
 - TCP协议
 
 	- spec.ports部分配置文件：
-ports:
+```ports:
     - name: https
       port: 6443
       protocol: TCP
@@ -31,20 +31,20 @@ ports:
       failureThreshold: 3
       tcpSocket:
         enable: true
-
+```
 - UDP协议
 
 	- spec.ports部分配置文件：
-ports:
+```ports:
     - name: udp
       port: 80
       protocol: UDP
       targetPort: 80
-
+```
 - 多协议
 
 	- spec.ports部分配置文件：
-ports:
+```ports:
     - name: https
       port: 6443
       protocol: TCP
@@ -65,7 +65,7 @@ ports:
       port: 80
       protocol: UDP
       targetPort: 80
-
+```
 ## 功能测试
 
 ### 1.部署crd
@@ -77,14 +77,13 @@ ports:
 - 同名svc已存在
 
 	- 预期：
-1.同一命名空间，创建成功，更新已有svc和ep
-2.不同命名空间，创建成功，且在当前命名空间创建svc和ep
+      1. 同一命名空间，创建成功，更新已有svc和ep
+      2. 不同命名空间，创建成功，且在当前命名空间创建svc和ep
 
 - 同名ep已存在
-
 	- 预期：
-1.同一命名空间，创建成功，更新已有svc和ep
-2.不同命名空间，创建成功，且在当前命名空间创建svc和ep
+      1. 同一命名空间，创建成功，更新已有svc和ep
+      2. 不同命名空间，创建成功，且在当前命名空间创建svc和ep
 
 - 配置中port名称重复
 
@@ -105,46 +104,46 @@ ports:
 	- 探活成功
 
 		- 预期：
-1.同名ep创建成功，显示ENDPOINTS信息，值为IP:PORT
-2.同名svc创建成功，
+          1. 同名ep创建成功，显示ENDPOINTS信息，值为IP:PORT
+          2. 同名svc创建成功，
 
 	- 探活失败
 
 		- 预期：
-1.同名ep创建成功，ENDPOINTS信息为<none>
-2.同名svc创建成功
+          1. 同名ep创建成功，ENDPOINTS信息为<none>
+          2. 同名svc创建成功
 
 - 多port
 
 	- 全部探活成功
 
 		- 预期：
-1.同名ep创建成功，显示ENDPOINTS信息，值为IP:PORT
-2.同名svc创建成功，
+          1. 同名ep创建成功，显示ENDPOINTS信息，值为IP:PORT
+          2. 同名svc创建成功，
 
 	- 部分探活失败
 
 		- 预期：
-1.同名ep创建成功，显示探活成功的ENDPOINTS信息，值为IP:PORT
-2.同名svc创建成功，
+          1. 同名ep创建成功，显示探活成功的ENDPOINTS信息，值为IP:PORT
+          2. 同名svc创建成功，
 
 	- 全部探活失败
 
 		- 预期：
-1.同名ep创建成功，ENDPOINTS信息为<none>
-2.同名svc创建成功，
+          1. 同名ep创建成功，ENDPOINTS信息为<none>
+          2. 同名svc创建成功，
 
 ### 3.删除crd创建的ep
 
 - 预期：
-1.删除成功
-2.同步自动创建出ep和更新svc？？？？
+  1. 删除成功
+  2. 同步自动创建出ep和更新svc？？？？
 
 ### 4.删除crd创建的svc
 
 - 预期：
-1.删除成功
-2.同时自动创建出svc
+  1. 删除成功
+  2. 同时自动创建出svc
 
 ### 5.删除crd
 
