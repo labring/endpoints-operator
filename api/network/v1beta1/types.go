@@ -92,13 +92,14 @@ type HTTPGetAction struct {
 }
 
 type GRPCAction struct {
+	Enable bool `json:"enable" protobuf:"bytes,1,opt,name=enable"`
 	// Service is the name of the service to place in the gRPC HealthCheckRequest
 	// (see https://github.com/grpc/grpc/blob/master/doc/health-checking.md).
 	//
 	// If this is not specified, the default behavior is defined by gRPC.
 	// +optional
 	// +default=""
-	Service *string `json:"service" protobuf:"bytes,1,opt,name=service"`
+	Service *string `json:"service" protobuf:"bytes,2,opt,name=service"`
 }
 
 // Handler defines a specific action that should be taken
