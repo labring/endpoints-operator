@@ -53,6 +53,8 @@ spec:
             - "{{ .Values.maxconcurrent }}"
             - --maxretry
             - "{{ .Values.maxretry }}"
+            - --metricsaddr
+            - "{{ .Values.metricsaddr }}"
           ports:
             - name: health
               containerPort: 8080

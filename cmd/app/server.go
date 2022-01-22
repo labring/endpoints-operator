@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/sealyun/endpoints-operator/controllers"
+	"github.com/sealyun/endpoints-operator/metrics"
 	"k8s.io/component-base/term"
 	"net/http"
 	"os"
@@ -35,7 +36,8 @@ import (
 )
 
 var (
-	scheme = runtime.NewScheme()
+	scheme      = runtime.NewScheme()
+	metricsInfo *metrics.MetricsInfo
 )
 
 func NewCommand() *cobra.Command {
@@ -91,9 +93,16 @@ func run(s *options.Options, ctx context.Context) error {
 			RenewDeadline:              &s.LeaderElection.RenewDeadline,
 		}
 	}
+
+	metricsInfo = metrics.NewMetricsInfo()
+	metricsInfo.RegisterAllMetrics()
+
 	mgrOptions.Scheme = scheme
 	mgrOptions.HealthProbeBindAddress = ":8080"
-	mgrOptions.MetricsBindAddress = ":9090"
+	// metric endpoint default binds to :9090
+	mgrOptions.MetricsBindAddress = s.MetricsBindAddress
+	klog.V(4).Info("[****] MetricsBindAddress value is ", s.MetricsBindAddress)
+
 	klog.V(0).Info("setting up manager")
 	ctrl.SetLogger(klogr.New())
 	// Use 8443 instead of 443 cause we need root permission to bind port 443
@@ -117,17 +126,19 @@ func run(s *options.Options, ctx context.Context) error {
 		clusterReconciler.RetryCount = 1
 	}
 
-	if s.MaxConcurrent > 0 {
-		clusterReconciler.WorkerNum = s.MaxConcurrent
-	} else {
-		clusterReconciler.WorkerNum = 1
-	}
-
 	if err = clusterReconciler.SetupWithManager(mgr); err != nil {
 		klog.Fatal("Unable to create cluster controller ", err)
 	}
 
 	klog.V(0).Info("Starting the controllers.")
+
+	if err = (&controllers.Reconciler{
+		MetricsInfo: metricsInfo,
+	}).SetupWithManager(mgr); err != nil {
+		klog.Error(err, "unable to create controller with metrics.")
+		os.Exit(1)
+	}
+
 	//healthz  Liveness
 	if err := mgr.AddHealthzCheck("check", func(req *http.Request) error {
 		return nil

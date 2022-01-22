@@ -12,23 +12,32 @@ type MetricsInfo struct {
 }
 
 const (
-	numCheckedKey           = "ep_num_checked"
-	numCheckFailedKey       = "ep_num_check_failed"
-	numCheckSuccessfulKey   = "ep_num_check_successful"
-	checkDurationSecondsKey = "ep_check_duration_seconds"
+	numCepsKey              = "cep_num_cpes"
+	numCheckedKey           = "cep_num_checked"
+	numCheckFailedKey       = "cep_num_check_failed"
+	numCheckSuccessfulKey   = "cep_num_check_successful"
+	checkDurationSecondsKey = "cep_check_duration_seconds"
 
-	epLabel = "endpointName"
+	cepLabel = "clusterEndpointName"
 )
 
 func NewMetricsInfo() *MetricsInfo {
 	return &MetricsInfo{
 		metrics: map[string]prometheus.Collector{
+			numCepsKey: prometheus.NewCounterVec(
+				prometheus.CounterOpts{
+					Name: numCepsKey,
+					Help: "Total number of ceps",
+				},
+				[]string{"totalCeps"},
+			),
+
 			numCheckedKey: prometheus.NewCounterVec(
 				prometheus.CounterOpts{
 					Name: numCheckedKey,
 					Help: "Total number of check",
 				},
-				[]string{epLabel},
+				[]string{cepLabel},
 			),
 
 			numCheckFailedKey: prometheus.NewCounterVec(
@@ -36,7 +45,7 @@ func NewMetricsInfo() *MetricsInfo {
 					Name: numCheckFailedKey,
 					Help: "Total number of failed check",
 				},
-				[]string{epLabel},
+				[]string{cepLabel},
 			),
 
 			numCheckSuccessfulKey: prometheus.NewCounterVec(
@@ -44,7 +53,7 @@ func NewMetricsInfo() *MetricsInfo {
 					Name: numCheckSuccessfulKey,
 					Help: "Total number of successful check",
 				},
-				[]string{epLabel},
+				[]string{cepLabel},
 			),
 
 			checkDurationSecondsKey: prometheus.NewHistogramVec(
@@ -71,7 +80,7 @@ func NewMetricsInfo() *MetricsInfo {
 						toSeconds(10 * time.Hour),
 					},
 				},
-				[]string{epLabel},
+				[]string{cepLabel},
 			),
 		},
 	}
