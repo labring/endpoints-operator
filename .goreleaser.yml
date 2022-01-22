@@ -13,7 +13,23 @@ builds:
     goarch:
       - amd64
       - arm64
-    main: ./cmd
+    main: ./cmd/endpoints-operator
+    ldflags:
+      - -X github.com/sealyun/endpoints-operator/library/version.gitVersion={{.Version}}
+      - -X github.com/sealyun/endpoints-operator/library/version.gitCommit={{.ShortCommit}}
+      - -X github.com/sealyun/endpoints-operator/library/version.buildDate={{.Date}}
+      - -s -w
+  - env:
+      - CGO_ENABLED=0
+    id: cepctl
+    binary: cepctl
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    main: ./cmd/cepctl
     ldflags:
       - -X github.com/sealyun/endpoints-operator/library/version.gitVersion={{.Version}}
       - -X github.com/sealyun/endpoints-operator/library/version.gitCommit={{.ShortCommit}}

@@ -17,12 +17,12 @@ package app
 import (
 	"context"
 	"fmt"
+	"github.com/sealyun/endpoints-operator/cmd/endpoints-operator/app/options"
 	"github.com/sealyun/endpoints-operator/controllers"
 	"k8s.io/component-base/term"
 	"net/http"
 	"os"
 
-	"github.com/sealyun/endpoints-operator/cmd/app/options"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"

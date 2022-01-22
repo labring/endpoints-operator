@@ -17,7 +17,7 @@ limitations under the License.
 package main
 
 import (
-	"github.com/sealyun/endpoints-operator/cmd/app"
+	"github.com/sealyun/endpoints-operator/cmd/endpoints-operator/app"
 	"os"
 )
 
