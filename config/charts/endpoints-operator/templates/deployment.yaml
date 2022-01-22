@@ -60,7 +60,7 @@ spec:
               containerPort: 8080
               protocol: TCP
             - name: metrics
-              containerPort: 9090
+              containerPort: "{{ .Values.metricsaddr }}"
               protocol: TCP
           readinessProbe:
             initialDelaySeconds: 10
