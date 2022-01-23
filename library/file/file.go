@@ -22,3 +22,8 @@ func GetUserHomeDir() string {
 	home, _ := os.UserHomeDir()
 	return home
 }
+
+func Exist(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil || os.IsExist(err)
+}

@@ -18,9 +18,14 @@ package main
 
 import (
 	"github.com/sealyun/endpoints-operator/cmd/cepctl/app"
+	"os"
 )
 
 func main() {
 
-	app.Execute()
+	command := app.NewCommand()
+
+	if err := command.Execute(); err != nil {
+		os.Exit(1)
+	}
 }

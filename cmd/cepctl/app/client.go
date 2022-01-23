@@ -17,42 +17,53 @@ limitations under the License.
 package app
 
 import (
+	"context"
 	"fmt"
-	"github.com/sealyun/endpoints-operator/library/file"
+	"github.com/sealyun/endpoints-operator/cmd/cepctl/app/options"
 	"github.com/spf13/cobra"
+	utilerrors "k8s.io/apimachinery/pkg/util/errors"
+	cliflag "k8s.io/component-base/cli/flag"
+	"k8s.io/component-base/term"
+	"k8s.io/klog/v2"
 	"os"
-	"path"
 )
 
-var (
-	// master is used to override the kubeconfig's URL to the apiserver.
-	master string
-	//kubeconfig is the path to a KubeConfig file.
-	kubeconfig string
-)
+func NewCommand() *cobra.Command {
+	s := options.NewOptions()
 
-// rootCmd represents the base command when called without any subcommands
-var rootCmd = &cobra.Command{
-	Use:   "cepctl",
-	Short: "cepctl is cli for cluster-endpoint",
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return nil
-	},
-}
-
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+	cmd := &cobra.Command{
+		Use:   "cepctl",
+		Short: "cepctl is cli for cluster-endpoint",
+		Run: func(cmd *cobra.Command, args []string) {
+			if errs := s.Validate(); len(errs) != 0 {
+				klog.Error(utilerrors.NewAggregate(errs))
+				os.Exit(1)
+			}
+			if err := run(s, context.Background()); err != nil {
+				klog.Error(err)
+				os.Exit(1)
+			}
+		},
+		SilenceUsage: true,
 	}
+
+	fs := cmd.Flags()
+	namedFlagSets := s.Flags()
+
+	for _, f := range namedFlagSets.FlagSets {
+		fs.AddFlagSet(f)
+	}
+
+	usageFmt := "Usage:\n  %s\n"
+	cols, _, _ := term.TerminalSize(cmd.OutOrStdout())
+	cmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
+		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "%s\n\n"+usageFmt, cmd.Long, cmd.UseLine())
+		cliflag.PrintSections(cmd.OutOrStdout(), namedFlagSets, cols)
+	})
+	return cmd
 }
 
-func init() {
-	rootCmd.PersistentFlags().StringVar(&kubeconfig, "kubeconfig", path.Join(file.GetUserHomeDir(), ".kube", "config"), "Path to kubeconfig file with authorization information (the master location can be overridden by the master flag).")
-	rootCmd.PersistentFlags().StringVar(&master, "master", "", "The address of the Kubernetes API server (overrides any value in kubeconfig)")
+func run(s *options.Options, ctx context.Context) error {
 
+	return nil
 }

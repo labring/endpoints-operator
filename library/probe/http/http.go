@@ -23,7 +23,7 @@ import (
 	"github.com/sealyun/endpoints-operator/library/io"
 	"github.com/sealyun/endpoints-operator/library/probe"
 	"github.com/sealyun/endpoints-operator/library/version"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 	"net/http"
 	"net/url"
 	"time"

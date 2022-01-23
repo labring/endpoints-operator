@@ -18,7 +18,7 @@ package tcp
 
 import (
 	"github.com/sealyun/endpoints-operator/library/probe"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 	"net"
 	"strconv"
 	"time"
