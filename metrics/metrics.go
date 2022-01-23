@@ -18,8 +18,10 @@ const (
 	numCheckSuccessfulKey   = "cep_num_check_successful"
 	checkDurationSecondsKey = "cep_check_duration_seconds"
 
-	cepLabel   = "clusterEndpointName"
-	nameSpaces = "nameSpacesName"
+	cepLabel   = "name"
+	nameSpaces = "namespaces"
+	instance   = "instance"
+	probe      = "probe"
 )
 
 func NewMetricsInfo() *MetricsInfo {
@@ -30,7 +32,7 @@ func NewMetricsInfo() *MetricsInfo {
 					Name: numCepsKey,
 					Help: "Total number of ceps",
 				},
-				[]string{"totalCeps", nameSpaces},
+				[]string{"total_Ceps", nameSpaces, probe},
 			),
 
 			numCheckedKey: prometheus.NewCounterVec(
@@ -38,7 +40,7 @@ func NewMetricsInfo() *MetricsInfo {
 					Name: numCheckedKey,
 					Help: "Total number of check",
 				},
-				[]string{cepLabel, nameSpaces},
+				[]string{cepLabel, nameSpaces, instance, probe},
 			),
 
 			numCheckFailedKey: prometheus.NewCounterVec(
@@ -46,7 +48,7 @@ func NewMetricsInfo() *MetricsInfo {
 					Name: numCheckFailedKey,
 					Help: "Total number of failed check",
 				},
-				[]string{cepLabel, nameSpaces},
+				[]string{cepLabel, nameSpaces, instance, probe},
 			),
 
 			numCheckSuccessfulKey: prometheus.NewCounterVec(
@@ -54,7 +56,7 @@ func NewMetricsInfo() *MetricsInfo {
 					Name: numCheckSuccessfulKey,
 					Help: "Total number of successful check",
 				},
-				[]string{cepLabel, nameSpaces},
+				[]string{cepLabel, nameSpaces, instance, probe},
 			),
 
 			checkDurationSecondsKey: prometheus.NewHistogramVec(
@@ -81,7 +83,7 @@ func NewMetricsInfo() *MetricsInfo {
 						toSeconds(10 * time.Hour),
 					},
 				},
-				[]string{cepLabel, nameSpaces},
+				[]string{cepLabel, nameSpaces, instance, probe},
 			),
 		},
 	}
@@ -94,31 +96,37 @@ func (m *MetricsInfo) RegisterAllMetrics() {
 }
 
 // RecordCheck updates the total number of checked.
-func (m *MetricsInfo) RecordCheck(epname, ns string) {
+func (m *MetricsInfo) RecordCeps(ns string) {
+	if pm, ok := m.metrics[numCepsKey].(*prometheus.CounterVec); ok {
+		pm.WithLabelValues(ns).Inc()
+	}
+}
 
+// RecordCheck updates the total number of checked.
+func (m *MetricsInfo) RecordCheck(epname, ns, instance, probe string) {
 	if pm, ok := m.metrics[numCheckedKey].(*prometheus.CounterVec); ok {
-		pm.WithLabelValues(epname, ns).Inc()
+		pm.WithLabelValues(epname, ns, instance, probe).Inc()
 	}
 }
 
 // RecordFailedCheck updates the total number of successful checked.
-func (m *MetricsInfo) RecordFailedCheck(epname, ns string) {
+func (m *MetricsInfo) RecordFailedCheck(epname, ns, instance, probe string) {
 	if pm, ok := m.metrics[numCheckFailedKey].(*prometheus.CounterVec); ok {
-		pm.WithLabelValues(epname, ns).Inc()
+		pm.WithLabelValues(epname, ns, instance, probe).Inc()
 	}
 }
 
 // RecordSuccessfulCheck updates the total number of successful checked.
-func (m *MetricsInfo) RecordSuccessfulCheck(epname, ns string) {
+func (m *MetricsInfo) RecordSuccessfulCheck(epname, ns, instance, probe string) {
 	if pm, ok := m.metrics[numCheckSuccessfulKey].(*prometheus.CounterVec); ok {
-		pm.WithLabelValues(epname, ns).Inc()
+		pm.WithLabelValues(epname, ns, instance, probe).Inc()
 	}
 }
 
 // RecordCheckDuration records the number of seconds taken by a checked.
-func (m *MetricsInfo) RecordCheckDuration(epname, ns string, seconds float64) {
+func (m *MetricsInfo) RecordCheckDuration(epname, ns, instance, probe string, seconds float64) {
 	if c, ok := m.metrics[checkDurationSecondsKey].(*prometheus.HistogramVec); ok {
-		c.WithLabelValues(epname, ns).Observe(seconds)
+		c.WithLabelValues(epname, ns, instance, probe).Observe(seconds)
 	}
 }
 
