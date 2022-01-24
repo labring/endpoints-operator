@@ -57,6 +57,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	r.Logger.V(4).Info("start reconcile for ceps")
 	ceps := &v1beta1.ClusterEndpoint{}
 	ctr := controller.Controller{
+		Logger: r.Logger,
 		Client:   r.Client,
 		Eventer:  r.Recorder,
 		Operator: r,
@@ -98,6 +99,12 @@ func (c *Reconciler) Update(ctx context.Context, req ctrl.Request, gvk schema.Gr
 	if err != nil {
 		return ctrl.Result{Requeue: true}, err
 	}
+
+	// ensure finalizer
+	if err := c.Client.Update(ctx,cep); err != nil {
+		return ctrl.Result{Requeue: true}, err
+	}
+
 	return c.UpdateStatus(ctx, req, cep)
 }
 
@@ -132,5 +139,18 @@ func (c *Reconciler) UpdateStatus(ctx context.Context, req ctrl.Request, cep *v1
 }
 
 func (c *Reconciler) Delete(ctx context.Context, req ctrl.Request, gvk schema.GroupVersionKind, obj client.Object) error {
+
+	c.Logger.V(4).Info("delete reconcile controller service", "request", req)
+	cep := &v1beta1.ClusterEndpoint{}
+	err := convert.JsonConvert(obj, cep)
+	if err != nil {
+		return err
+	}
+
+	// ensure remove finalizer
+	if err := c.Client.Update(ctx,cep); err != nil {
+		return err
+	}
+
 	return nil
 }

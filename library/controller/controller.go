@@ -70,9 +70,13 @@ func (r *Controller) Run(ctx context.Context, req ctrl.Request, obj client.Objec
 		return r.Operator.Update(ctx, req, r.Gvk, ustructObj)
 	} else {
 		// The object is being deleted
+		r.Logger.Info("process cep delete", "namespace", obj.GetNamespace(), "name", obj.GetName())
 		if controllerutil.ContainsFinalizer(ustructObj, r.FinalizerName) {
+			r.Logger.Info("remove finalizer and start to delete obj", "finalizers", ustructObj.GetFinalizers())
+			controllerutil.RemoveFinalizer(ustructObj, r.FinalizerName)
+
 			// our finalizer is present, so lets handle any external dependency
-			if err = r.Operator.Delete(ctx, req, r.Gvk, ustructObj); err != nil {
+			if err := r.Operator.Delete(ctx, req, r.Gvk, ustructObj); err != nil {
 				// if fail to delete the external dependency here, return with error
 				// so that it can be retried
 				if err == WaitDelete {
@@ -84,7 +88,6 @@ func (r *Controller) Run(ctx context.Context, req ctrl.Request, obj client.Objec
 				//如果修改失败重新放入队列
 				return ctrl.Result{Requeue: true}, err
 			}
-			controllerutil.RemoveFinalizer(ustructObj, r.FinalizerName)
 		}
 		// Stop reconciliation as the item is being deleted
 		return ctrl.Result{}, nil
