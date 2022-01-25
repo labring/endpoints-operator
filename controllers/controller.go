@@ -123,6 +123,7 @@ func (c *Reconciler) UpdateStatus(ctx context.Context, req ctrl.Request, cep *v1
 	err := c.updateStatus(ctx, req.NamespacedName, &cep.Status)
 	if err != nil {
 		c.Recorder.Eventf(cep, corev1.EventTypeWarning, "SyncStatus", "Sync status %s is error: %v", cep.Name, err)
+		return ctrl.Result{}, err
 	}
 	sec := time.Duration(cep.Spec.PeriodSeconds) * time.Second
 	if cep.Spec.PeriodSeconds == 0 {
