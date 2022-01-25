@@ -31,7 +31,10 @@ type Options struct {
 	//KubeConfig is the path to a KubeConfig file.
 	KubeConfig    string
 	Name          string
+	Namespace     string
 	PeriodSeconds int32
+	Probe         bool
+	Output        string
 }
 
 func NewOptions() *Options {
@@ -40,6 +43,9 @@ func NewOptions() *Options {
 		KubeConfig:    path.Join(file.GetUserHomeDir(), ".kube", "config"),
 		PeriodSeconds: 10,
 		Name:          "",
+		Probe:         false,
+		Namespace:     "default",
+		Output:        "",
 	}
 	return s
 }
@@ -53,9 +59,12 @@ func (s *Options) Flags() cliflag.NamedFlagSets {
 
 	cep := fss.FlagSet("cep")
 	cep.StringVar(&s.Name, "service-name", s.Name, "Sync cap from service name.")
+	cep.StringVar(&s.Namespace, "service-namespace", s.Namespace, "Sync cap from service namespace.")
+	cep.StringVarP(&s.Output, "output", "o", s.Output, "output json|yaml. if not set,will create cep to kubernetes")
 
 	probe := fss.FlagSet("probe")
 	probe.Int32Var(&s.PeriodSeconds, "periodSeconds", s.PeriodSeconds, "How often (in seconds) to perform the probe.Default is 10.")
+	probe.BoolVar(&s.Probe, "probe", s.Probe, "When set value is true,add default probe of tcpAction.")
 
 	kfs := fss.FlagSet("klog")
 	local := flag.NewFlagSet("klog", flag.ExitOnError)
@@ -78,6 +87,14 @@ func (s *Options) Validate() []error {
 	}
 	if len(s.Name) == 0 {
 		errs = append(errs, errors.New("service name must not empty"))
+	}
+	if len(s.Namespace) == 0 {
+		errs = append(errs, errors.New("service namespace must not empty"))
+	}
+	if len(s.Output) != 0 {
+		if s.Output != "yaml" && s.Output != "json" {
+			errs = append(errs, errors.New("output must be is yaml or json"))
+		}
 	}
 	return errs
 }

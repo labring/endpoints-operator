@@ -18,14 +18,21 @@ package app
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"github.com/sealyun/endpoints-operator/api/network/v1beta1"
+	"github.com/sealyun/endpoints-operator/client"
 	"github.com/sealyun/endpoints-operator/cmd/cepctl/app/options"
 	"github.com/spf13/cobra"
+	v1 "k8s.io/api/core/v1"
+	v1opts "k8s.io/apimachinery/pkg/apis/meta/v1"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
+	"k8s.io/apimachinery/pkg/util/json"
 	cliflag "k8s.io/component-base/cli/flag"
 	"k8s.io/component-base/term"
 	"k8s.io/klog/v2"
 	"os"
+	"sigs.k8s.io/yaml"
 )
 
 func NewCommand() *cobra.Command {
@@ -64,6 +71,67 @@ func NewCommand() *cobra.Command {
 }
 
 func run(s *options.Options, ctx context.Context) error {
+	cli := client.NewKubernetesClient(client.NewKubernetesOptions(s.KubeConfig, s.Master))
+	if cli == nil {
+		return errors.New("build kube client error")
+	}
+	cep := &v1beta1.ClusterEndpoint{}
+	cep.Namespace = s.Namespace
+	cep.Name = s.Name
+	cep.Spec.PeriodSeconds = s.PeriodSeconds
+	svc, err := cli.Kubernetes().CoreV1().Services(s.Namespace).Get(ctx, s.Name, v1opts.GetOptions{})
+	if err != nil {
+		return err
+	}
+	klog.V(4).InfoS("get service", "name", s.Name, "namespace", s.Namespace, "spec", svc.Spec)
+	if svc.Spec.ClusterIP == v1.ClusterIPNone {
+		return errors.New("not support clusterIP=None service")
+	}
+	ports := make([]v1beta1.ServicePort, len(svc.Spec.Ports))
+	for i, p := range svc.Spec.Ports {
+		enable := s.Probe
+		ports[i] = v1beta1.ServicePort{
+			Handler: v1beta1.Handler{
+				TCPSocket: &v1beta1.TCPSocketAction{Enable: enable},
+			},
+			TimeoutSeconds:   1,
+			SuccessThreshold: 1,
+			FailureThreshold: 3,
+			Name:             p.Name,
+			Protocol:         p.Protocol,
+			Port:             p.Port,
+			TargetPort:       p.TargetPort.IntVal,
+		}
+	}
+	cep.Spec.Ports = ports
+	cep.Spec.ClusterIP = svc.Spec.ClusterIP
+	ep, _ := cli.Kubernetes().CoreV1().Endpoints(s.Namespace).Get(ctx, s.Name, v1opts.GetOptions{})
+	if ep != nil {
+		klog.V(4).InfoS("get endpoint", "name", s.Name, "namespace", s.Namespace, "subsets", ep.Subsets)
+		if len(ep.Subsets) > 1 {
+			return errors.New("not support endpoint subsets length more than 1. Please spilt it")
+		}
+		cep.Spec.Hosts = convertAddress(ep.Subsets[0].Addresses)
+	}
+	configJson, _ := json.Marshal(cep)
+	configYaml, _ := yaml.Marshal(cep)
+	klog.V(4).InfoS("generator cep", "name", s.Name, "namespace", s.Namespace, "config", string(configJson))
 
+	if s.Output == "yaml" {
+		println(string(configYaml))
+		return nil
+	}
+	if s.Output == "json" {
+		println(string(configJson))
+		return nil
+	}
 	return nil
+}
+
+func convertAddress(addresses []v1.EndpointAddress) []string {
+	eas := make([]string, 0)
+	for _, s := range addresses {
+		eas = append(eas, s.IP)
+	}
+	return eas
 }
