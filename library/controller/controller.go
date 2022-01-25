@@ -17,6 +17,9 @@ package controller
 import (
 	"context"
 	"fmt"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/util/retry"
 	"strings"
 
 	"github.com/go-logr/logr"
@@ -67,8 +70,15 @@ func (r *Controller) Run(ctx context.Context, req ctrl.Request, obj client.Objec
 		// then lets add the finalizer and update the object. This is equivalent
 		// registering our finalizer.
 		controllerutil.AddFinalizer(ustructObj, r.FinalizerName)
+		if err = r.setFinalizers(ctx, req, obj, ustructObj.GetFinalizers()); err != nil {
+			r.Eventer.Eventf(obj, corev1.EventTypeWarning, "FailedUpdate", "Update %s: %v", lowerKind, err)
+			//如果修改失败重新放入队列
+			r.Logger.Error(err, "unable to set finalizer", "finalizer", r.FinalizerName)
+			return ctrl.Result{Requeue: true}, err
+		}
 		return r.Operator.Update(ctx, req, r.Gvk, ustructObj)
 	} else {
+		r.Logger.V(4).Info("delete reconcile controller service", "request", req)
 		// The object is being deleted
 		if controllerutil.ContainsFinalizer(ustructObj, r.FinalizerName) {
 			// our finalizer is present, so lets handle any external dependency
@@ -84,9 +94,36 @@ func (r *Controller) Run(ctx context.Context, req ctrl.Request, obj client.Objec
 				//如果修改失败重新放入队列
 				return ctrl.Result{Requeue: true}, err
 			}
+			r.Logger.V(4).Info("remove finalizer  to delete obj", "finalizers", ustructObj.GetFinalizers())
 			controllerutil.RemoveFinalizer(ustructObj, r.FinalizerName)
+			if err = r.setFinalizers(ctx, req, obj, ustructObj.GetFinalizers()); err != nil {
+				r.Eventer.Eventf(obj, corev1.EventTypeWarning, "FailedDelete", "Deleted %s: %v", lowerKind, err)
+				r.Logger.Error(err, "failed set finalizer the resource", "err", err.Error())
+				return ctrl.Result{Requeue: true}, err
+			}
 		}
 		// Stop reconciliation as the item is being deleted
 		return ctrl.Result{}, nil
 	}
+}
+
+func (r *Controller) setFinalizers(ctx context.Context, req ctrl.Request, obj runtime.Object, finalizers []string) error {
+	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		gvk := obj.GetObjectKind().GroupVersionKind()
+		fetchObject := &unstructured.Unstructured{}
+		fetchObject.SetAPIVersion(gvk.GroupVersion().String())
+		fetchObject.SetKind(gvk.Kind)
+		err := r.Client.Get(ctx, req.NamespacedName, fetchObject)
+		if err != nil {
+			// We log this error, but we continue and try to set the ownerRefs on the other resources.
+			return err
+		}
+		fetchObject.SetFinalizers(finalizers)
+		err = r.Client.Update(ctx, fetchObject)
+		if err != nil {
+			// We log this error, but we continue and try to set the ownerRefs on the other resources.
+			return err
+		}
+		return nil
+	})
 }

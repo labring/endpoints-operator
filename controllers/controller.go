@@ -58,6 +58,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	ceps := &v1beta1.ClusterEndpoint{}
 	ctr := controller.Controller{
 		Client:   r.Client,
+		Logger:   r.Logger,
 		Eventer:  r.Recorder,
 		Operator: r,
 		Gvk: schema.GroupVersionKind{
