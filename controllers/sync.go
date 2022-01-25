@@ -150,12 +150,12 @@ func healthyCheck(host string, cep *v1beta1.ClusterEndpoint, retry int, metricsi
 	var mx sync.Mutex
 	var data []v1beta1.ServicePort
 	var errors []error
-	checkListChan := make(chan struct {
+	var checkList []struct {
 		CepName           string
 		NsName            string
 		TargetHostAndPort string
 		probe             string
-	}, 200)
+	}
 
 	for _, p := range cep.Spec.Ports {
 		wg.Add(1)
@@ -178,12 +178,12 @@ func healthyCheck(host string, cep *v1beta1.ClusterEndpoint, retry int, metricsi
 			}
 			if port.HTTPGet != nil {
 				// add metrics point
-				checkListChan <- struct {
+				checkList = append(checkList, struct {
 					CepName           string
 					NsName            string
 					TargetHostAndPort string
 					probe             string
-				}{CepName: cep.Name, NsName: cep.Namespace, TargetHostAndPort: host + ":" + strconv.Itoa(int(port.TargetPort)), probe: "HTTP"}
+				}{CepName: cep.Name, NsName: cep.Namespace, TargetHostAndPort: host + ":" + strconv.Itoa(int(port.TargetPort)), probe: "HTTP"})
 				pro.HTTPGet = &libv1.HTTPGetAction{
 					Path:        port.HTTPGet.Path,
 					Port:        intstr.FromInt(int(port.TargetPort)),
@@ -194,12 +194,12 @@ func healthyCheck(host string, cep *v1beta1.ClusterEndpoint, retry int, metricsi
 			}
 			if port.TCPSocket != nil && port.TCPSocket.Enable {
 				// add metrics point
-				checkListChan <- struct {
+				checkList = append(checkList, struct {
 					CepName           string
 					NsName            string
 					TargetHostAndPort string
 					probe             string
-				}{CepName: cep.Name, NsName: cep.Namespace, TargetHostAndPort: host + ":" + strconv.Itoa(int(port.TargetPort)), probe: "TCP"}
+				}{CepName: cep.Name, NsName: cep.Namespace, TargetHostAndPort: host + ":" + strconv.Itoa(int(port.TargetPort)), probe: "TCP"})
 
 				pro.TCPSocket = &libv1.TCPSocketAction{
 					Port: intstr.FromInt(int(port.TargetPort)),
@@ -208,12 +208,12 @@ func healthyCheck(host string, cep *v1beta1.ClusterEndpoint, retry int, metricsi
 			}
 			if port.UDPSocket != nil && port.UDPSocket.Enable {
 				// add metrics point
-				checkListChan <- struct {
+				checkList = append(checkList, struct {
 					CepName           string
 					NsName            string
 					TargetHostAndPort string
 					probe             string
-				}{CepName: cep.Name, NsName: cep.Namespace, TargetHostAndPort: host + ":" + strconv.Itoa(int(port.TargetPort)), probe: "UDP"}
+				}{CepName: cep.Name, NsName: cep.Namespace, TargetHostAndPort: host + ":" + strconv.Itoa(int(port.TargetPort)), probe: "UDP"})
 
 				pro.UDPSocket = &libv1.UDPSocketAction{
 					Port: intstr.FromInt(int(port.TargetPort)),
@@ -223,12 +223,12 @@ func healthyCheck(host string, cep *v1beta1.ClusterEndpoint, retry int, metricsi
 			}
 			if port.GRPC != nil && port.GRPC.Enable {
 				// add metrics point
-				checkListChan <- struct {
+				checkList = append(checkList, struct {
 					CepName           string
 					NsName            string
 					TargetHostAndPort string
 					probe             string
-				}{CepName: cep.Name, NsName: cep.Namespace, TargetHostAndPort: host + ":" + strconv.Itoa(int(port.TargetPort)), probe: "GRPC"}
+				}{CepName: cep.Name, NsName: cep.Namespace, TargetHostAndPort: host + ":" + strconv.Itoa(int(port.TargetPort)), probe: "GRPC"})
 
 				pro.GRPC = &libv1.GRPCAction{
 					Port:    port.TargetPort,
@@ -253,8 +253,7 @@ func healthyCheck(host string, cep *v1beta1.ClusterEndpoint, retry int, metricsi
 		}(p)
 	}
 	wg.Wait()
-	close(checkListChan)
-	for checkdata := range checkListChan {
+	for _, checkdata := range checkList {
 		metricsinfo.RecordCheck(checkdata.CepName, checkdata.NsName, checkdata.TargetHostAndPort, checkdata.probe)
 		//metricsinfo.RecordCeps(checkdata.NsName)
 	}
