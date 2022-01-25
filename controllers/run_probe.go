@@ -46,21 +46,19 @@ type work struct {
 	lastResult probe.Result
 	retry      int
 	err        error
-	checkProbe string
 }
 
-func (pb *prober) runProbeWithRetries(p *libv1.Probe, retries int) (probe.Result, string, error, string) {
+func (pb *prober) runProbeWithRetries(p *libv1.Probe, retries int) (probe.Result, string, error) {
 	var err error
 	var result probe.Result
 	var output string
-	var checkProbe string
 	for i := 0; i < retries; i++ {
-		result, output, err, checkProbe = pb.runProbe(p)
+		result, output, err = pb.runProbe(p)
 		if err == nil {
-			return result, output, nil, checkProbe
+			return result, output, nil
 		}
 	}
-	return result, output, err, checkProbe
+	return result, output, err
 }
 
 func (w *work) doProbe() (keepGoing bool) {
@@ -69,12 +67,11 @@ func (w *work) doProbe() (keepGoing bool) {
 
 	// the full container environment here, OR we must make a call to the CRI in order to get those environment
 	// values from the running container.
-	result, output, err, checkProbe := proberCheck.runProbeWithRetries(w.p, w.retry)
+	result, output, err := proberCheck.runProbeWithRetries(w.p, w.retry)
 	if err != nil {
 		w.err = err
 		return false
 	}
-	w.checkProbe = checkProbe
 
 	if w.lastResult == result {
 		w.resultRun++
@@ -122,57 +119,53 @@ func newProber() *prober {
 	}
 }
 
-func (pb *prober) runProbe(p *libv1.Probe) (probe.Result, string, error, string) {
+func (pb *prober) runProbe(p *libv1.Probe) (probe.Result, string, error) {
 	timeout := time.Duration(p.TimeoutSeconds) * time.Second
 	if p.Exec != nil {
 		klog.V(4).Infof("Exec-Probe Command: %v", p.Exec.Command)
 		//command := ""
-		return probe.Success, "", nil, "EXEC"
+		return probe.Success, "", nil
 	}
 	if p.HTTPGet != nil {
 		scheme := strings.ToLower(string(p.HTTPGet.Scheme))
 		host := p.HTTPGet.Host
 		port, err := extractPort(p.HTTPGet.Port)
 		if err != nil {
-			return probe.Unknown, "", err, "HTTP"
+			return probe.Unknown, "", err
 		}
 		path := p.HTTPGet.Path
 		klog.V(4).Infof("HTTP-Probe Host: %v://%v, Port: %v, Path: %v", scheme, host, port, path)
 		url := formatURL(scheme, host, port, path)
 		headers := buildHeader(p.HTTPGet.HTTPHeaders)
 		klog.V(4).Infof("HTTP-Probe Headers: %v", headers)
-		result, s, err := pb.http.Probe(url, headers, timeout)
-		return result, s, err, "HTTP"
+		return pb.http.Probe(url, headers, timeout)
 	}
 	if p.TCPSocket != nil {
 		port, err := extractPort(p.TCPSocket.Port)
 		if err != nil {
-			return probe.Unknown, "", err, "TCP"
+			return probe.Unknown, "", err
 		}
 		host := p.TCPSocket.Host
 		klog.V(4).Infof("TCP-Probe Host: %v, Port: %v, Timeout: %v", host, port, timeout)
-		result, s, err := pb.tcp.Probe(host, port, timeout)
-		return result, s, err, "TCP"
+		return pb.tcp.Probe(host, port, timeout)
 	}
 	if p.UDPSocket != nil {
 		port, err := extractPort(p.UDPSocket.Port)
 		if err != nil {
-			return probe.Unknown, "", err, "UDP"
+			return probe.Unknown, "", err
 		}
 		host := p.UDPSocket.Host
 		klog.V(4).Infof("UDP-Probe Host: %v, Port: %v, Timeout: %v", host, port, timeout)
-		result, s, err := pb.udp.Probe(host, port, p.UDPSocket.Data, timeout)
-		return result, s, err, "UDP"
+		return pb.udp.Probe(host, port, p.UDPSocket.Data, timeout)
 	}
 	if p.GRPC != nil {
 		host := &(p.GRPC.Host)
 		service := p.GRPC.Service
 		klog.V(4).Info("GRPC-Probe Host: %v,Service: %v, Port: %v, Timeout: %v", host, service, p.GRPC.Port, timeout)
-		result, s, err := pb.grpc.Probe(*host, *service, int(p.GRPC.Port), timeout)
-		return result, s, err, "GRPC"
+		return pb.grpc.Probe(*host, *service, int(p.GRPC.Port), timeout)
 	}
 	klog.Warning("failed to find probe builder")
-	return probe.Warning, "", nil, "UnKnow"
+	return probe.Warning, "", nil
 }
 
 func extractPort(param intstr.IntOrString) (int, error) {

@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/sealyun/endpoints-operator/metrics"
+	"k8s.io/klog"
 	"strconv"
 	"sync"
 
@@ -150,6 +151,7 @@ func healthyCheck(host string, cep *v1beta1.ClusterEndpoint, retry int, metricsi
 	var mx sync.Mutex
 	var data []v1beta1.ServicePort
 	var errors []error
+	var probe string
 	var checkList []struct {
 		CepName           string
 		NsName            string
@@ -241,13 +243,28 @@ func healthyCheck(host string, cep *v1beta1.ClusterEndpoint, retry int, metricsi
 			}
 			mx.Lock()
 			err := w.err
+
+			if w.p.ProbeHandler.Exec != nil {
+				probe = "EXEC"
+			} else if w.p.ProbeHandler.HTTPGet != nil {
+				probe = "HTTP"
+			} else if w.p.ProbeHandler.TCPSocket != nil {
+				probe = "TCP"
+			} else if w.p.ProbeHandler.UDPSocket != nil {
+				probe = "UDP"
+			} else if w.p.ProbeHandler.GRPC != nil {
+				probe = "GRPC"
+			}
+
+			klog.V(4).Info("[****] Probe is ", probe)
+
 			if err != nil {
 				// add metrics point
-				metricsinfo.RecordFailedCheck(cep.Name, cep.Namespace, host+":"+strconv.Itoa(int(port.TargetPort)), w.checkProbe)
+				metricsinfo.RecordFailedCheck(cep.Name, cep.Namespace, host+":"+strconv.Itoa(int(port.TargetPort)), probe)
 				errors = append(errors, err)
 			} else {
 				// add metrics point
-				metricsinfo.RecordSuccessfulCheck(cep.Name, cep.Namespace, host+":"+strconv.Itoa(int(port.TargetPort)), w.checkProbe)
+				metricsinfo.RecordSuccessfulCheck(cep.Name, cep.Namespace, host+":"+strconv.Itoa(int(port.TargetPort)), probe)
 				data = append(data, port)
 			}
 		}(p)
