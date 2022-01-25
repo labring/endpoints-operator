@@ -32,7 +32,6 @@ type Options struct {
 	LeaderElectionResourceLock string
 	MaxConcurrent              int
 	MaxRetry                   int
-	MetricsBindAddress         string
 }
 
 func NewOptions() *Options {
@@ -73,9 +72,6 @@ func (s *Options) Flags() cliflag.NamedFlagSets {
 		"which can be run. Defaults to 1.")
 	mc.IntVar(&s.MaxRetry, "maxretry", 1, "MaxRetry this is the maximum number of retry liveliness "+
 		"which can be run. Defaults to 1.")
-
-	mbafs := fss.FlagSet("metrics")
-	mbafs.StringVar(&s.MetricsBindAddress, "metricsaddr", ":9090", "The address the metric endpoint binds to.")
 
 	return fss
 }

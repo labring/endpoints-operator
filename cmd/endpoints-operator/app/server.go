@@ -99,10 +99,7 @@ func run(s *options.Options, ctx context.Context) error {
 
 	mgrOptions.Scheme = scheme
 	mgrOptions.HealthProbeBindAddress = ":8080"
-	// metric endpoint default binds to :9090
-	mgrOptions.MetricsBindAddress = s.MetricsBindAddress
-	klog.V(4).Info("[****] MetricsBindAddress value is ", s.MetricsBindAddress)
-
+	mgrOptions.MetricsBindAddress = ":9090"
 	klog.V(0).Info("setting up manager")
 	ctrl.SetLogger(klogr.New())
 	// Use 8443 instead of 443 cause we need root permission to bind port 443
