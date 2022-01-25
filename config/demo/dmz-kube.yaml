@@ -19,7 +19,6 @@ metadata:
 spec:
   clusterIP: 10.96.0.100
   periodSeconds: 10
-  timeoutSeconds: 1
   hosts:
     - 10.0.112.255
     - 10.0.112.251
@@ -28,12 +27,13 @@ spec:
       port: 6443
       protocol: TCP
       targetPort: 6443
+      timeoutSeconds: 1
       tcpSocket:
         enable: true
     - name: udp-data
-        port: 1234
-        protocol: UDP
-        targetPort: 1234
-        udpSocket:
-          enable: true
-          data: "testdata"
+      port: 1234
+      protocol: UDP
+      targetPort: 1234
+      udpSocket:
+        enable: true
+        data: "testdata"
