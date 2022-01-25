@@ -37,7 +37,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	urutime "k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 )
 
 type work struct {

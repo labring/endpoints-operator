@@ -21,7 +21,7 @@ import (
 	"github.com/sealyun/endpoints-operator/library/ioutils"
 	"github.com/sealyun/endpoints-operator/library/probe"
 
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 	"k8s.io/utils/exec"
 )
 

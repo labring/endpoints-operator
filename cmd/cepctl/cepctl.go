@@ -17,11 +17,12 @@ limitations under the License.
 package main
 
 import (
-	"github.com/sealyun/endpoints-operator/cmd/app"
+	"github.com/sealyun/endpoints-operator/cmd/cepctl/app"
 	"os"
 )
 
 func main() {
+
 	command := app.NewCommand()
 
 	if err := command.Execute(); err != nil {
