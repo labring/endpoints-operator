@@ -48,12 +48,12 @@ func (pr udpProber) Probe(host string, port int, testData []byte, timeout time.D
 func DoUDPProbe(addr string, testData []byte, timeout time.Duration) (probe.Result, string, error) {
 
 	serverAddr, err := net.ResolveUDPAddr("udp", addr)
-	klog.Infoln("Scan UDP Endpoint: ", addr)
+	klog.Infoln("Connecting UDP Endpoint: ", addr)
 	if err != nil {
 		return probe.Failure, err.Error(), nil
 	}
-
-	conn, err := net.DialUDP("udp", nil, serverAddr)
+	udpAddr := serverAddr.IP.String() + ":" + strconv.Itoa(serverAddr.Port)
+	conn, err := net.DialTimeout("udp", udpAddr, timeout)
 	if err != nil {
 		return probe.Failure, err.Error(), nil
 	}
