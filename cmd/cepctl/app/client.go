@@ -116,16 +116,18 @@ func run(s *options.Options, ctx context.Context) error {
 	configJson, _ := json.Marshal(cep)
 	configYaml, _ := yaml.Marshal(cep)
 	klog.V(4).InfoS("generator cep", "name", s.Name, "namespace", s.Namespace, "config", string(configJson))
-
-	if s.Output == "yaml" {
-		println(string(configYaml))
-		return nil
+	if s.Output != "" {
+		if s.Output == "yaml" {
+			println(string(configYaml))
+			return nil
+		}
+		if s.Output == "json" {
+			println(string(configJson))
+			return nil
+		}
 	}
-	if s.Output == "json" {
-		println(string(configJson))
-		return nil
-	}
-	return nil
+	c := client.NewCep(cli.KubernetesDynamic())
+	return c.CreateCR(ctx, cep)
 }
 
 func convertAddress(addresses []v1.EndpointAddress) []string {
