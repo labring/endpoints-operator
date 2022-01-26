@@ -19,6 +19,9 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"github.com/sealyun/endpoints-operator/metrics"
+	"k8s.io/klog"
+	"strconv"
 	"sync"
 
 	"github.com/sealyun/endpoints-operator/api/network/v1beta1"
@@ -91,7 +94,7 @@ func (c *Reconciler) syncEndpoint(ctx context.Context, cep *v1beta1.ClusterEndpo
 			healthyHosts := make([]healthyHostAndPort, 0)
 			e := make([]error, 0)
 			for _, h := range cep.Spec.Hosts {
-				healthyPorts, errors := healthyCheck(h, cep, c.RetryCount)
+				healthyPorts, errors := healthyCheck(h, cep, c.RetryCount, c.MetricsInfo)
 				if len(healthyPorts) > 0 {
 					healthyHosts = append(healthyHosts, healthyHostAndPort{
 						sps:  healthyPorts,
@@ -101,6 +104,7 @@ func (c *Reconciler) syncEndpoint(ctx context.Context, cep *v1beta1.ClusterEndpo
 				subErr := ToAggregate(errors)
 				if subErr != nil && len(subErr.Errors()) != 0 {
 					e = append(e, fmt.Errorf(subErr.Error()))
+
 				}
 
 			}
@@ -142,11 +146,19 @@ func (c *Reconciler) syncEndpoint(ctx context.Context, cep *v1beta1.ClusterEndpo
 	}
 }
 
-func healthyCheck(host string, cep *v1beta1.ClusterEndpoint, retry int) ([]v1beta1.ServicePort, []error) {
+func healthyCheck(host string, cep *v1beta1.ClusterEndpoint, retry int, metricsinfo *metrics.MetricsInfo) ([]v1beta1.ServicePort, []error) {
 	var wg sync.WaitGroup
 	var mx sync.Mutex
 	var data []v1beta1.ServicePort
 	var errors []error
+	var probe string
+	var checkList []struct {
+		CepName           string
+		NsName            string
+		TargetHostAndPort string
+		probe             string
+	}
+
 	for _, p := range cep.Spec.Ports {
 		wg.Add(1)
 		go func(port v1beta1.ServicePort) {
@@ -167,6 +179,13 @@ func healthyCheck(host string, cep *v1beta1.ClusterEndpoint, retry int) ([]v1bet
 				FailureThreshold: port.FailureThreshold,
 			}
 			if port.HTTPGet != nil {
+				// add metrics point
+				checkList = append(checkList, struct {
+					CepName           string
+					NsName            string
+					TargetHostAndPort string
+					probe             string
+				}{CepName: cep.Name, NsName: cep.Namespace, TargetHostAndPort: host + ":" + strconv.Itoa(int(port.TargetPort)), probe: "HTTP"})
 				pro.HTTPGet = &libv1.HTTPGetAction{
 					Path:        port.HTTPGet.Path,
 					Port:        intstr.FromInt(int(port.TargetPort)),
@@ -176,12 +195,28 @@ func healthyCheck(host string, cep *v1beta1.ClusterEndpoint, retry int) ([]v1bet
 				}
 			}
 			if port.TCPSocket != nil && port.TCPSocket.Enable {
+				// add metrics point
+				checkList = append(checkList, struct {
+					CepName           string
+					NsName            string
+					TargetHostAndPort string
+					probe             string
+				}{CepName: cep.Name, NsName: cep.Namespace, TargetHostAndPort: host + ":" + strconv.Itoa(int(port.TargetPort)), probe: "TCP"})
+
 				pro.TCPSocket = &libv1.TCPSocketAction{
 					Port: intstr.FromInt(int(port.TargetPort)),
 					Host: host,
 				}
 			}
 			if port.UDPSocket != nil && port.UDPSocket.Enable {
+				// add metrics point
+				checkList = append(checkList, struct {
+					CepName           string
+					NsName            string
+					TargetHostAndPort string
+					probe             string
+				}{CepName: cep.Name, NsName: cep.Namespace, TargetHostAndPort: host + ":" + strconv.Itoa(int(port.TargetPort)), probe: "UDP"})
+
 				pro.UDPSocket = &libv1.UDPSocketAction{
 					Port: intstr.FromInt(int(port.TargetPort)),
 					Host: host,
@@ -189,6 +224,14 @@ func healthyCheck(host string, cep *v1beta1.ClusterEndpoint, retry int) ([]v1bet
 				}
 			}
 			if port.GRPC != nil && port.GRPC.Enable {
+				// add metrics point
+				checkList = append(checkList, struct {
+					CepName           string
+					NsName            string
+					TargetHostAndPort string
+					probe             string
+				}{CepName: cep.Name, NsName: cep.Namespace, TargetHostAndPort: host + ":" + strconv.Itoa(int(port.TargetPort)), probe: "GRPC"})
+
 				pro.GRPC = &libv1.GRPCAction{
 					Port:    port.TargetPort,
 					Host:    host,
@@ -200,13 +243,36 @@ func healthyCheck(host string, cep *v1beta1.ClusterEndpoint, retry int) ([]v1bet
 			}
 			mx.Lock()
 			err := w.err
+
+			if w.p.ProbeHandler.Exec != nil {
+				probe = "EXEC"
+			} else if w.p.ProbeHandler.HTTPGet != nil {
+				probe = "HTTP"
+			} else if w.p.ProbeHandler.TCPSocket != nil {
+				probe = "TCP"
+			} else if w.p.ProbeHandler.UDPSocket != nil {
+				probe = "UDP"
+			} else if w.p.ProbeHandler.GRPC != nil {
+				probe = "GRPC"
+			}
+
+			klog.V(4).Info("[****] Probe is ", probe)
+
 			if err != nil {
+				// add metrics point
+				metricsinfo.RecordFailedCheck(cep.Name, cep.Namespace, host+":"+strconv.Itoa(int(port.TargetPort)), probe)
 				errors = append(errors, err)
 			} else {
+				// add metrics point
+				metricsinfo.RecordSuccessfulCheck(cep.Name, cep.Namespace, host+":"+strconv.Itoa(int(port.TargetPort)), probe)
 				data = append(data, port)
 			}
 		}(p)
 	}
 	wg.Wait()
+	for _, checkdata := range checkList {
+		metricsinfo.RecordCheck(checkdata.CepName, checkdata.NsName, checkdata.TargetHostAndPort, checkdata.probe)
+		//metricsinfo.RecordCeps(checkdata.NsName)
+	}
 	return data, errors
 }

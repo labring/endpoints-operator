@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"github.com/sealyun/endpoints-operator/metrics"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -45,12 +46,13 @@ const (
 // Reconciler reconciles a Service object
 type Reconciler struct {
 	client.Client
-	Logger     logr.Logger
-	Recorder   record.EventRecorder
-	cache      cache.Cache
-	scheme     *runtime.Scheme
-	RetryCount int
-	WorkNum    int
+	Logger      logr.Logger
+	Recorder    record.EventRecorder
+	cache       cache.Cache
+	scheme      *runtime.Scheme
+	RetryCount  int
+	WorkNum     int
+	MetricsInfo *metrics.MetricsInfo
 }
 
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {

@@ -57,6 +57,8 @@ func DoUDPProbe(addr string, testData string, timeout time.Duration) (probe.Resu
 	if err != nil {
 		return probe.Failure, err.Error(), nil
 	}
+	defer conn.Close()
+
 	deadline := time.Now().Add(timeout * time.Second)
 	_ = conn.SetWriteDeadline(deadline)
 	buf := []byte(testData)
@@ -70,10 +72,7 @@ func DoUDPProbe(addr string, testData string, timeout time.Duration) (probe.Resu
 	if err != nil {
 		return probe.Failure, err.Error(), nil
 	}
-	err = conn.Close()
-	if err != nil {
-		klog.Errorf("Unexpected error closing UDP probe socket: %v (%#v)", err, err)
-	}
+
 	if read > 0 {
 		klog.V(6).Info("recv:", string(bufr[:read]))
 		return probe.Success, "", nil
