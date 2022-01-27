@@ -74,7 +74,15 @@ type UDPSocketAction struct {
 	Enable bool `json:"enable" protobuf:"bytes,1,opt,name=enable"`
 	// UDP test data
 	// +optional
-	Data string `json:"data" protobuf:"bytes,2,opt,name=data"`
+	Data []int8 `json:"data,omitempty" protobuf:"bytes,2,rep,name=data"`
+}
+
+func Int8ArrToByteArr(data []int8) []byte {
+	r := make([]byte, len(data))
+	for i, d := range data {
+		r[i] = byte(d)
+	}
+	return r
 }
 
 // HTTPGetAction describes an action based on HTTP Get requests.

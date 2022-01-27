@@ -31,13 +31,13 @@ func New() Prober {
 
 // Prober is an interface that defines the Probe function for doing UDP readiness/liveness checks.
 type Prober interface {
-	Probe(host string, port int, testData string, timeout time.Duration) (probe.Result, string, error)
+	Probe(host string, port int, testData []byte, timeout time.Duration) (probe.Result, string, error)
 }
 
 type udpProber struct{}
 
 // Probe returns a ProbeRunner capable of running a UDP check.
-func (pr udpProber) Probe(host string, port int, testData string, timeout time.Duration) (probe.Result, string, error) {
+func (pr udpProber) Probe(host string, port int, testData []byte, timeout time.Duration) (probe.Result, string, error) {
 	return DoUDPProbe(net.JoinHostPort(host, strconv.Itoa(port)), testData, timeout)
 }
 
@@ -45,7 +45,7 @@ func (pr udpProber) Probe(host string, port int, testData string, timeout time.D
 // If the socket can be opened, it returns Success
 // If the socket fails to open, it returns Failure.
 // This is exported because some other packages may want to do direct UDP probes.
-func DoUDPProbe(addr string, testData string, timeout time.Duration) (probe.Result, string, error) {
+func DoUDPProbe(addr string, testData []byte, timeout time.Duration) (probe.Result, string, error) {
 
 	serverAddr, err := net.ResolveUDPAddr("udp", addr)
 	klog.Infoln("Scan UDP Endpoint: ", addr)
@@ -61,7 +61,7 @@ func DoUDPProbe(addr string, testData string, timeout time.Duration) (probe.Resu
 
 	deadline := time.Now().Add(timeout * time.Second)
 	_ = conn.SetWriteDeadline(deadline)
-	buf := []byte(testData)
+	buf := testData
 	_, err = conn.Write(buf)
 	if err != nil {
 		return probe.Failure, err.Error(), nil

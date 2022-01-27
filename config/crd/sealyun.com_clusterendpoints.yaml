@@ -178,7 +178,9 @@ spec:
                       properties:
                         data:
                           description: UDP test data
-                          type: string
+                          items:
+                            type: integer
+                          type: array
                         enable:
                           type: boolean
                       required:
