@@ -15,11 +15,11 @@
 FROM alpine:latest
 MAINTAINER "cuisongliu <cuisongliu@qq.com>"
 
-ENTRYPOINT ["/usr/bin/endpoints-operator"]
+ENTRYPOINT ["/root/endpoints-operator"]
 
 ARG TARGETPLATFORM
-WORKDIR /usr/bin/
+WORKDIR /root
 
-RUN --mount=target=/build tar xf /build/dist/endpoints-operator_*_$(echo ${TARGETPLATFORM} | tr '/' '_' | sed -e 's/arm_/arm/').tar.gz
+RUN --mount=target=/build tar xf /build/dist/endpoints-operator_*_$(echo ${TARGETPLATFORM} | tr '/' '_' | sed -e 's/arm_/arm/').tar.gz && cp endpoints-operator /usr/bin && rm -rf cepctl
 
 CMD ["--help"]

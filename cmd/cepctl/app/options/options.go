@@ -35,6 +35,8 @@ type Options struct {
 	PeriodSeconds int32
 	Probe         bool
 	Output        string
+	Version       bool
+	Short         bool
 }
 
 func NewOptions() *Options {
@@ -46,6 +48,8 @@ func NewOptions() *Options {
 		Probe:         false,
 		Namespace:     "default",
 		Output:        "",
+		Version:       false,
+		Short:         false,
 	}
 	return s
 }
@@ -66,6 +70,10 @@ func (s *Options) Flags() cliflag.NamedFlagSets {
 	probe.Int32Var(&s.PeriodSeconds, "periodSeconds", s.PeriodSeconds, "How often (in seconds) to perform the probe.Default is 10.")
 	probe.BoolVar(&s.Probe, "probe", s.Probe, "When set value is true,add default probe of tcpAction.")
 
+	version := fss.FlagSet("version")
+	version.BoolVar(&s.Version, "version", s.Version, "Print the client  version information")
+	version.BoolVar(&s.Short, "short", s.Short, "If true, print just the version number.")
+
 	kfs := fss.FlagSet("klog")
 	local := flag.NewFlagSet("klog", flag.ExitOnError)
 	klog.InitFlags(local)
@@ -79,6 +87,9 @@ func (s *Options) Flags() cliflag.NamedFlagSets {
 
 func (s *Options) Validate() []error {
 	var errs []error
+	if s.Version {
+		return errs
+	}
 	if s.PeriodSeconds < 0 {
 		errs = append(errs, errors.New("param periodSeconds must more than zero"))
 	}

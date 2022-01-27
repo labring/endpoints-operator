@@ -51,5 +51,17 @@ jobs:
             --build-arg VERSION=dev \
             --push \
             -t ${DOCKER_REPO}:dev \
-            -f Dockerfile \
+            -f dockerfiles/endpoints-operator/Dockerfile \
+            .
+      - name: build (and publish) cepctl image
+        env:
+          # fork friendly ^^
+          DOCKER_REPO: ghcr.io/${{ github.repository_owner }}/cepctl
+        run: |
+          docker buildx build \
+            --platform linux/amd64,linux/arm64 \
+            --build-arg VERSION=dev \
+            --push \
+            -t ${DOCKER_REPO}:dev \
+            -f dockerfiles/cepctl/Dockerfile \
             .
