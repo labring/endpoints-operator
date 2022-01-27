@@ -74,13 +74,13 @@ type UDPSocketAction struct {
 	Enable bool `json:"enable" protobuf:"bytes,1,opt,name=enable"`
 	// UDP test data
 	// +optional
-	Data []int8 `json:"data,omitempty" protobuf:"bytes,2,rep,name=data"`
+	Data []uint8 `json:"data,omitempty" protobuf:"varint,2,rep,name=data"`
 }
 
-func Int8ArrToByteArr(data []int8) []byte {
+func Int8ArrToByteArr(data []uint8) []byte {
 	r := make([]byte, len(data))
 	for i, d := range data {
-		r[i] = byte(d)
+		r[i] = d
 	}
 	return r
 }
