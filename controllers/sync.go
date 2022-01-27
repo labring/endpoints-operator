@@ -212,7 +212,7 @@ func healthyCheck(host string, cep *v1beta1.ClusterEndpoint, retry int, metricsi
 				pro.UDPSocket = &libv1.UDPSocketAction{
 					Port: intstr.FromInt(int(port.TargetPort)),
 					Host: host,
-					Data: port.UDPSocket.Data,
+					Data: v1beta1.Int8ArrToByteArr(port.UDPSocket.Data),
 				}
 			}
 			if port.GRPC != nil && port.GRPC.Enable {

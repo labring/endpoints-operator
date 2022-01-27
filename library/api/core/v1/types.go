@@ -72,7 +72,7 @@ type UDPSocketAction struct {
 	// +optional
 	Host string `json:"host,omitempty" protobuf:"bytes,2,opt,name=host"`
 	// +optional
-	Data string `json:"data,omitempty" protobuf:"bytes,3,opt,name=host"`
+	Data []byte `json:"data,omitempty" protobuf:"bytes,3,rep,name=data"`
 }
 
 type GRPCAction struct {
