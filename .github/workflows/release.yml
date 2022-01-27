@@ -55,12 +55,31 @@ jobs:
             --build-arg VERSION=${{ steps.prepare.outputs.tag_name }} \
             --push \
             -t ${DOCKER_REPO}:${{ steps.prepare.outputs.tag_name }} \
-            -f Dockerfile \
+            -f dockerfiles/endpoints-operator/Dockerfile \
             .
           docker buildx build \
             --platform linux/amd64,linux/arm64 \
             --build-arg VERSION=latest \
             --push \
             -t ${DOCKER_REPO}:latest \
-            -f Dockerfile \
+            -f dockerfiles/endpoints-operator/Dockerfile \
+            .
+      - name: build (and publish) cepctl image
+        env:
+          # fork friendly ^^
+          DOCKER_REPO: ghcr.io/${{ github.repository_owner }}/cepctl
+        run: |
+          docker buildx build \
+            --platform linux/amd64,linux/arm64 \
+            --build-arg VERSION=${{ steps.prepare.outputs.tag_name }} \
+            --push \
+            -t ${DOCKER_REPO}:${{ steps.prepare.outputs.tag_name }} \
+            -f dockerfiles/cepctl/Dockerfile \
+            .
+          docker buildx build \
+            --platform linux/amd64,linux/arm64 \
+            --build-arg VERSION=latest \
+            --push \
+            -t ${DOCKER_REPO}:latest \
+            -f dockerfiles/cepctl/Dockerfile \
             .

@@ -23,6 +23,7 @@ import (
 	"github.com/sealyun/endpoints-operator/api/network/v1beta1"
 	"github.com/sealyun/endpoints-operator/client"
 	"github.com/sealyun/endpoints-operator/cmd/cepctl/app/options"
+	"github.com/sealyun/endpoints-operator/library/version"
 	"github.com/spf13/cobra"
 	v1 "k8s.io/api/core/v1"
 	v1opts "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -71,6 +72,14 @@ func NewCommand() *cobra.Command {
 }
 
 func run(s *options.Options, ctx context.Context) error {
+	if s.Version {
+		if s.Short {
+			fmt.Printf("Version: %s\n", version.Get().GitVersion)
+		} else {
+			fmt.Printf("Version: %s\n", fmt.Sprintf("%#v", version.Get()))
+		}
+		return nil
+	}
 	cli := client.NewKubernetesClient(client.NewKubernetesOptions(s.KubeConfig, s.Master))
 	if cli == nil {
 		return errors.New("build kube client error")
@@ -86,6 +95,9 @@ func run(s *options.Options, ctx context.Context) error {
 	klog.V(4).InfoS("get service", "name", s.Name, "namespace", s.Namespace, "spec", svc.Spec)
 	if svc.Spec.ClusterIP == v1.ClusterIPNone {
 		return errors.New("not support clusterIP=None service")
+	}
+	if svc.Spec.Selector != nil && len(svc.Spec.Selector) != 0 {
+		return errors.New("not support selector not empty service")
 	}
 	ports := make([]v1beta1.ServicePort, len(svc.Spec.Ports))
 	for i, p := range svc.Spec.Ports {
