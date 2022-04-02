@@ -19,10 +19,11 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"github.com/sealyun/endpoints-operator/metrics"
-	"k8s.io/klog"
 	"strconv"
 	"sync"
+
+	"github.com/sealyun/endpoints-operator/metrics"
+	"k8s.io/klog"
 
 	"github.com/sealyun/endpoints-operator/api/network/v1beta1"
 	libv1 "github.com/sealyun/endpoints-operator/library/api/core/v1"
@@ -52,7 +53,7 @@ func (c *Reconciler) syncService(ctx context.Context, cep *v1beta1.ClusterEndpoi
 			if err := controllerutil.SetControllerReference(cep, svc, c.scheme); err != nil {
 				return err
 			}
-			svc.Spec.ClusterIP = cep.Spec.ClusterIP
+			// svc.Spec.ClusterIP = cep.Spec.ClusterIP
 			svc.Spec.Type = corev1.ServiceTypeClusterIP
 			svc.Spec.SessionAffinity = corev1.ServiceAffinityNone
 			svc.Spec.Ports = convertServicePorts(cep.Spec.Ports)
