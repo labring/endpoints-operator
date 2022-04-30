@@ -17,9 +17,9 @@ package app
 import (
 	"context"
 	"fmt"
-	"github.com/sealyun/endpoints-operator/cmd/endpoints-operator/app/options"
-	"github.com/sealyun/endpoints-operator/controllers"
-	"github.com/sealyun/endpoints-operator/metrics"
+	"github.com/labring/endpoints-operator/cmd/endpoints-operator/app/options"
+	"github.com/labring/endpoints-operator/controllers"
+	"github.com/labring/endpoints-operator/metrics"
 	"k8s.io/component-base/term"
 	"net/http"
 	"os"

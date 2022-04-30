@@ -18,7 +18,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/sealyun/endpoints-operator/library/file"
+	"github.com/labring/endpoints-operator/library/file"
 	cliflag "k8s.io/component-base/cli/flag"
 	"k8s.io/klog/v2"
 	"path"

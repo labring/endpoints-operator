@@ -19,7 +19,7 @@ package grpc
 import (
 	"context"
 	"fmt"
-	"github.com/sealyun/endpoints-operator/library/probe"
+	"github.com/labring/endpoints-operator/library/probe"
 	"net"
 	"net/http"
 	"net/http/httptest"

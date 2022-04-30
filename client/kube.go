@@ -15,7 +15,7 @@
 package client
 
 import (
-	"github.com/sealyun/endpoints-operator/library/file"
+	"github.com/labring/endpoints-operator/library/file"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"

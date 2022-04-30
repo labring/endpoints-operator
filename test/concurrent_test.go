@@ -17,8 +17,8 @@ limitations under the License.
 package test
 
 import (
-	"github.com/sealyun/endpoints-operator/api/network/v1beta1"
-	"github.com/sealyun/endpoints-operator/test/testhelper"
+	"github.com/labring/endpoints-operator/api/network/v1beta1"
+	"github.com/labring/endpoints-operator/test/testhelper"
 	"testing"
 )
 
