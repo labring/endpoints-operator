@@ -61,6 +61,7 @@ func (pb *prober) runProbeWithRetries(p *libv1.Probe, retries int) (probe.Result
 	return result, output, err
 }
 
+//nolint: errcheck
 func (w *work) doProbe() (keepGoing bool) {
 	defer func() { recover() }() // Actually eat panics (HandleCrash takes care of logging)
 	defer urutime.HandleCrash(func(_ interface{}) { keepGoing = true })
