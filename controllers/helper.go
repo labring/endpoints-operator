@@ -20,7 +20,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/sealyun/endpoints-operator/api/network/v1beta1"
+	"github.com/labring/endpoints-operator/api/network/v1beta1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -67,16 +67,6 @@ func (c *Reconciler) syncFinalStatus(cep *v1beta1.ClusterEndpoint) {
 	c.updateCondition(cep, clusterReadyCondition)
 }
 
-func convertAddress(addresses []string) []v1.EndpointAddress {
-	eas := make([]v1.EndpointAddress, 0)
-	for _, s := range addresses {
-		eas = append(eas, v1.EndpointAddress{
-			IP: s,
-		})
-	}
-	return eas
-}
-
 type healthyHostAndPort struct {
 	sps  []v1beta1.ServicePort
 	host string
@@ -115,19 +105,6 @@ func ToAggregate(list []error) utilerrors.Aggregate {
 		errs = append(errs, err)
 	}
 	return utilerrors.NewAggregate(errs)
-}
-
-func convertPorts(sps []v1beta1.ServicePort) []v1.EndpointPort {
-	s := make([]v1.EndpointPort, 0)
-	for _, sp := range sps {
-		endPoint := v1.EndpointPort{
-			Name:     sp.Name,
-			Port:     sp.TargetPort,
-			Protocol: sp.Protocol,
-		}
-		s = append(s, endPoint)
-	}
-	return s
 }
 
 func convertServicePorts(sps []v1beta1.ServicePort) []v1.ServicePort {
@@ -185,17 +162,4 @@ func (c *Reconciler) updateCondition(cep *v1beta1.ClusterEndpoint, condition v1b
 	if !hasCondition {
 		cep.Status.Conditions = append(cep.Status.Conditions, condition)
 	}
-}
-func (c *Reconciler) deleteCondition(cep *v1beta1.ClusterEndpoint, conditionType v1beta1.ConditionType) {
-	if cep.Status.Conditions == nil {
-		cep.Status.Conditions = make([]v1beta1.Condition, 0)
-	}
-	newConditions := make([]v1beta1.Condition, 0)
-	for _, cond := range cep.Status.Conditions {
-		if cond.Type == conditionType {
-			continue
-		}
-		newConditions = append(newConditions, cond)
-	}
-	cep.Status.Conditions = newConditions
 }

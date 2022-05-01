@@ -1,4 +1,4 @@
-module github.com/sealyun/endpoints-operator/library
+module github.com/labring/endpoints-operator/library
 
 go 1.13
 

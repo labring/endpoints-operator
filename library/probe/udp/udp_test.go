@@ -15,7 +15,7 @@
 package udp
 
 import (
-	"github.com/sealyun/endpoints-operator/library/probe"
+	"github.com/labring/endpoints-operator/library/probe"
 	"net"
 	"strings"
 	"testing"

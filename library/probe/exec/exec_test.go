@@ -18,7 +18,7 @@ package exec
 
 import (
 	"fmt"
-	"github.com/sealyun/endpoints-operator/library/probe"
+	"github.com/labring/endpoints-operator/library/probe"
 	"io"
 	"strings"
 	"testing"

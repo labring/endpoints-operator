@@ -17,7 +17,7 @@ limitations under the License.
 package main
 
 import (
-	"github.com/sealyun/endpoints-operator/cmd/cepctl/app"
+	"github.com/labring/endpoints-operator/cmd/cepctl/app"
 	"os"
 )
 

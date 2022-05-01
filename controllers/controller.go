@@ -18,13 +18,13 @@ package controllers
 
 import (
 	"context"
-	"github.com/sealyun/endpoints-operator/metrics"
+	"github.com/labring/endpoints-operator/metrics"
 	"time"
 
 	"github.com/go-logr/logr"
-	"github.com/sealyun/endpoints-operator/api/network/v1beta1"
-	"github.com/sealyun/endpoints-operator/library/controller"
-	"github.com/sealyun/endpoints-operator/library/convert"
+	"github.com/labring/endpoints-operator/api/network/v1beta1"
+	"github.com/labring/endpoints-operator/library/controller"
+	"github.com/labring/endpoints-operator/library/convert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"

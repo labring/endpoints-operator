@@ -19,8 +19,8 @@ package grpc
 import (
 	"context"
 	"fmt"
-	"github.com/sealyun/endpoints-operator/library/probe"
-	"github.com/sealyun/endpoints-operator/library/version"
+	"github.com/labring/endpoints-operator/library/probe"
+	"github.com/labring/endpoints-operator/library/version"
 	"net"
 	"time"
 

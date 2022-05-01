@@ -36,7 +36,7 @@ endpoints-operator是一个云原生、高可靠性、高性能、面向K8s内�
 ## 安装
 
 ```bash
-git clone https://github.com/sealyun/endpoints-operator.git
+git clone https://github.com/labring/endpoints-operator.git
 cd endpoints-operator 
 checkout v0.1.0
 helm install -n kube-system endpoints-operator config/charts/endpoints-operator
