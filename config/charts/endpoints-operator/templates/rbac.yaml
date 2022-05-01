@@ -51,8 +51,8 @@ rules:
       - events
     verbs:
       - '*'
-  - apiGroups: 
-      - 'sealyun.com'
+  - apiGroups:
+      - 'sealos.io'
     resources:
       - clusterendpoints
       - clusterendpoints/status
