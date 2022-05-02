@@ -1,4 +1,4 @@
-# Copyright © 2022 The sealyun Authors.
+# Copyright © 2022 The sealos Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@
 replicaCount: 2
 
 image:
-  repository: ghcr.io/sealyun
+  repository: ghcr.io/labring
   image: endpoints-operator
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
@@ -52,8 +52,8 @@ service:
 
 resources:
   limits:
-    cpu: 200m
-    memory: 256Mi
+    cpu: 500m
+    memory: 758Mi
   requests:
     cpu: 100m
     memory: 128Mi

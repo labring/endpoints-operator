@@ -13,3 +13,8 @@
 - 新增对应的监控数据
 - 新增cepctl工具做数据转换
 - 新增webhook证书维护代码
+
+## [v0.2.0](#v0.2.0)
+
+- 所有的domain更正为sealos.io
+- FixBug #86 不支持clusterIP=None

@@ -25,9 +25,9 @@ import (
 func TestAddCrs(t *testing.T) {
 	cep := &v1beta1.ClusterEndpoint{}
 	cep.Namespace = "default"
-	testhelper.CreateTestCRs(10, "sealyun", cep, t)
+	testhelper.CreateTestCRs(10, "sealos", cep, t)
 }
 
 func TestDeleteCrs(t *testing.T) {
-	testhelper.DeleteTestCRs("sealyun", "default", t)
+	testhelper.DeleteTestCRs("sealos", "default", t)
 }

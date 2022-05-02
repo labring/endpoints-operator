@@ -4,8 +4,8 @@
 
 ### 注意事项:
 
-v0.1.1 版本的数据是sealyun.com的domain
-v0.1.2 之后所有的domain都是sealos.io
+- v0.1.1 版本的数据是sealyun.com的domain
+- v0.2.0 之后所有的domain都是sealos.io
 
 也可以手动执行一下脚本,namespace为xxx
 ```shell
@@ -45,13 +45,19 @@ endpoints-operator是一个云原生、高可靠性、高性能、面向K8s内�
 
 主要使用在集群内部的Pod需要访问外部服务的场景，比如数据库、中间件等，通过endpoints-operator的探活能力，可及时将有问题的后端服务剔除，避免受单个宕机副本影响，并可查看status获取后端服务健康状态和探活失败的服务。
 
-## 安装
+## helm 安装
 
 ```bash
 git clone https://github.com/labring/endpoints-operator.git
 cd endpoints-operator 
-checkout v0.1.0
+checkout v0.2.0
 helm install -n kube-system endpoints-operator config/charts/endpoints-operator
+```
+
+## sealos 安装
+
+```bash
+sealos run labring/endpoints-operator:v0.2.0
 ```
 
 ## Usage
