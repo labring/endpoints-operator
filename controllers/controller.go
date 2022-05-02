@@ -68,7 +68,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 			Version: v1beta1.GroupVersion.Version,
 			Kind:    "ClusterEndpoint",
 		},
-		FinalizerName: "sealyun.com/cluster-endpoints.finalizers",
+		FinalizerName: "sealos.io/cluster-endpoints.finalizers",
 	}
 	ceps.APIVersion = ctr.Gvk.GroupVersion().String()
 	ceps.Kind = ctr.Gvk.Kind

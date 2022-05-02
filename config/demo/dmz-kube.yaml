@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: sealyun.com/v1beta1
+apiVersion: sealos.io/v1beta1
 kind: ClusterEndpoint
 metadata:
   name: dmz-kube

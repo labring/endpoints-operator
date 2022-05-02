@@ -7,7 +7,7 @@ GOBIN=$(shell go env GOPATH)/bin
 else
 GOBIN=$(shell go env GOBIN)
 endif
-
+GOPATH=$(shell go env GOPATH)
 SHELL = /usr/bin/env bash -o pipefail
 .SHELLFLAGS = -ec
 
@@ -19,7 +19,7 @@ TMP_DIR=$$(mktemp -d) ;\
 cd $$TMP_DIR ;\
 go mod init tmp ;\
 echo "Downloading $(2)" ;\
-GOBIN=$(PROJECT_DIR)/bin go get $(2) ;\
+GOBIN=$(PROJECT_DIR)/bin go install $(2) ;\
 rm -rf $$TMP_DIR ;\
 }
 endef
@@ -29,7 +29,7 @@ default:  build
 
 GORELEASER_BIN = $(shell pwd)/bin/goreleaser
 install-goreleaser: ## check license if not exist install go-lint tools
-	$(call go-get-tool,$(GORELEASER_BIN),github.com/goreleaser/goreleaser@latest)
+	$(call go-get-tool,$(GORELEASER_BIN),github.com/goreleaser/goreleaser@v1.6.3)
 
 
 build: SHELL:=/bin/bash
@@ -58,7 +58,7 @@ filelicense: install-addlicense
 
 DEEPCOPY_BIN = $(shell pwd)/bin/deepcopy-gen
 install-deepcopy: ## check license if not exist install go-lint tools
-	$(call go-get-tool,$(DEEPCOPY_BIN),k8s.io/code-generator/cmd/deepcopy-gen@latest)
+	$(call go-get-tool,$(DEEPCOPY_BIN),k8s.io/code-generator/cmd/deepcopy-gen@v0.23.6)
 
 HEAD_FILE := hack/boilerplate.go.txt
 INPUT_DIR := github.com/labring/endpoints-operator/api/network/v1beta1

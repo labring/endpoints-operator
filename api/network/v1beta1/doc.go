@@ -21,4 +21,4 @@ package v1beta1
 // +k8s:openapi-gen=false
 // +k8s:defaulter-gen=TypeMeta
 
-// +groupName=sealyun.com
+// +groupName=sealos.io

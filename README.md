@@ -2,6 +2,18 @@
 
 > 对于集群内访问集群外部服务场景使用固定的endpoint维护增加探活功能
 
+### 注意事项:
+
+v0.1.1 版本的数据是sealyun.com的domain
+v0.1.2 之后所有的domain都是sealos.io
+
+也可以手动执行一下脚本,namespace为xxx
+```shell
+for cep in $(kubectl get cep -n xxx  -o jsonpath={.items[*].metadata.name});do kubectl patch cep -n xxx --type='json' -p='[{"op": "replace", "path": "/metadata/finalizers", "value":[]}]'  $cep;done
+```
+
+升级资源之前最好先备份一下cr删除之后再重新创建即可。
+
 ## 背景
 
 - 在实际使用中，两个K8s集群之间的服务经常有互相访问和访问集群外部某些服务的需求，通常的解决方案为手动维护固定的Services和Endpoints或者直接在业务配置中写死IP，在这时候，是没有对外部服务进行探活的功能的，无法做到高可用。如果需要高可用一般是引入外部高可用LB来解决，但这样增加了复杂度，且好多公司不具备引入条件，不是最优解决方案。
@@ -45,7 +57,7 @@ helm install -n kube-system endpoints-operator config/charts/endpoints-operator
 ## Usage
 
 ```yaml
-apiVersion: sealyun.com/v1beta1
+apiVersion: sealos.io/v1beta1
 kind: ClusterEndpoint
 metadata:
   name: wordpress
