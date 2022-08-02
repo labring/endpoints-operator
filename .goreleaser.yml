@@ -38,7 +38,7 @@ builds:
 release:
   prerelease: auto
   extra_files:
-    - glob: ./endpoints-operator-0.2.0.tgz
+    - glob: ./endpoints-operator*.tgz
 checksum:
   name_template: '{{ .ProjectName }}_checksums.txt'
 snapshot:
