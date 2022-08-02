@@ -16,3 +16,4 @@
 bin
 .idea
 dist
+endpoints-operator*.tgz
