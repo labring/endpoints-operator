@@ -29,11 +29,22 @@ jobs:
         uses: actions/checkout@v3
       - name: Setup Pages
         uses: actions/configure-pages@v1
+      - name: Install Helm
+        uses: azure/setup-helm@v1
+        with:
+          version: v3.8.1
+
       - name: Build with Jekyll
         uses: actions/jekyll-build-pages@v1
         with:
           source: ./
           destination: ./_site
+      - name: Helm package
+        run: |
+          helm package config/charts/endpoints-operator 
+          tag=$(git describe --tags `git rev-list --tags --max-count=1`)
+          helm repo index . --url https://github.com/labring/endpoints-operator/releases/download/$tag
+          cp  index.yaml _site/
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
 
