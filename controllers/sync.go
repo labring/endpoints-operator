@@ -1,5 +1,5 @@
 /*
-Copyright 2022 The sealyun Authors.
+Copyright 2022 The sealos Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -53,7 +53,9 @@ func (c *Reconciler) syncService(ctx context.Context, cep *v1beta1.ClusterEndpoi
 			if err := controllerutil.SetControllerReference(cep, svc, c.scheme); err != nil {
 				return err
 			}
-			// svc.Spec.ClusterIP = cep.Spec.ClusterIP
+			if cep.Spec.ClusterIP == corev1.ClusterIPNone {
+				svc.Spec.ClusterIP = corev1.ClusterIPNone
+			}
 			svc.Spec.Type = corev1.ServiceTypeClusterIP
 			svc.Spec.SessionAffinity = corev1.ServiceAffinityNone
 			svc.Spec.Ports = convertServicePorts(cep.Spec.Ports)

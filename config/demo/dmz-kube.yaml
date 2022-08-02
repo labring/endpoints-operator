@@ -1,4 +1,4 @@
-# Copyright © 2022 sealyun.
+# Copyright © 2022 sealos.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,11 +17,10 @@ kind: ClusterEndpoint
 metadata:
   name: dmz-kube
 spec:
-  clusterIP: 10.96.0.100
+  clusterIP: None
   periodSeconds: 10
   hosts:
-    - 10.0.112.255
-    - 10.0.112.251
+    - 192.168.64.24
   ports:
     - name: https
       port: 6443
@@ -30,10 +29,3 @@ spec:
       timeoutSeconds: 1
       tcpSocket:
         enable: true
-    - name: udp-data
-      port: 1234
-      protocol: UDP
-      targetPort: 1234
-      udpSocket:
-        enable: true
-        data: "testdata"

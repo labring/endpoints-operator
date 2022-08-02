@@ -86,7 +86,7 @@ func run(s *options.Options, ctx context.Context) error {
 		mgrOptions = manager.Options{
 			LeaderElection:             s.LeaderElect,
 			LeaderElectionNamespace:    "kube-system",
-			LeaderElectionID:           "sealyun-endpoints-operator-leader-election",
+			LeaderElectionID:           "sealos-endpoints-operator-leader-election",
 			LeaderElectionResourceLock: s.LeaderElectionResourceLock,
 			LeaseDuration:              &s.LeaderElection.LeaseDuration,
 			RetryPeriod:                &s.LeaderElection.RetryPeriod,

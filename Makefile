@@ -51,7 +51,7 @@ filelicense:
 filelicense: install-addlicense
 	for file in ${Dirs} ; do \
 		if [[  $$file != '_output' && $$file != 'docs' && $$file != 'vendor' && $$file != 'logger' && $$file != 'applications' ]]; then \
-			$(ADDLICENSE_BIN)  -y $(shell date +"%Y") -c "The sealyun Authors." -f hack/LICENSE ./$$file ; \
+			$(ADDLICENSE_BIN)  -y $(shell date +"%Y") -c "The sealos Authors." -f hack/LICENSE ./$$file ; \
 		fi \
     done
 
@@ -68,7 +68,12 @@ deepcopy:install-deepcopy
       -O zz_generated.deepcopy   \
       --go-header-file "$(HEAD_FILE)" \
       --output-base "${GOPATH}/src"
+CONTROLLER_GEN = $(shell pwd)/bin/controller-gen
+.PHONY: controller-gen
+controller-gen: ## Download controller-gen locally if necessary.
+	$(call go-get-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.8.0)
 
 # Generate manifests e.g. CRD, RBAC etc.
-manifests:
-	controller-gen crd:trivialVersions=true rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd
+manifests: controller-gen
+	#$(CONTROLLER_GEN) crd:trivialVersions=true rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd
+	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd
