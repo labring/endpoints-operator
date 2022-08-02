@@ -16,7 +16,6 @@ apiVersion: v2
 name: endpoints-operator
 description: kubernetes endpoints balance for outsite apiserver
 engine: gotpl
-appVersion: "6.1.1"
 kubeVersion: ">=1.16.0-0"
 sources:
   - https://github.com/labring/endpoints-operator
