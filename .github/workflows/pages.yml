@@ -42,8 +42,7 @@ jobs:
       - name: Helm package
         run: |
           helm package config/charts/endpoints-operator 
-          tag=$(git describe --tags | cut -d  '-' -f 1)
-          helm repo index . --url https://github.com/labring/endpoints-operator/releases/download/$tag
+          helm repo index . --url https://github.com/labring/endpoints-operator/releases/download/v0.2.0
           cp  index.yaml _site/
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
