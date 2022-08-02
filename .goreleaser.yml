@@ -35,12 +35,10 @@ builds:
       - -X github.com/labring/endpoints-operator/library/version.gitCommit={{.ShortCommit}}
       - -X github.com/labring/endpoints-operator/library/version.buildDate={{.Date}}
       - -s -w
-#archives:
-#  - replacements:
-#      darwin: Darwin
-#      linux: Linux
-#      amd64: x86_64
-#      arm64: aarch64
+release:
+  prerelease: auto
+  extra_files:
+    - glob: ./endpoints-operator-0.2.0.tgz
 checksum:
   name_template: '{{ .ProjectName }}_checksums.txt'
 snapshot:
