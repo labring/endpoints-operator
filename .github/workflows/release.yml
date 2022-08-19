@@ -32,7 +32,9 @@ jobs:
 
       - name: Helm package
         run: |
+          sed -i "s#latest#${{ steps.prepare.outputs.tag_name }}#g" config/charts/endpoints-operator/values.yaml
           helm package config/charts/endpoints-operator 
+          git checkout .
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v1
