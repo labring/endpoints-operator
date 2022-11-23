@@ -17,12 +17,13 @@ package app
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"os"
+
 	"github.com/labring/endpoints-operator/cmd/endpoints-operator/app/options"
 	"github.com/labring/endpoints-operator/controllers"
 	"github.com/labring/endpoints-operator/metrics"
 	"k8s.io/component-base/term"
-	"net/http"
-	"os"
 
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/runtime"

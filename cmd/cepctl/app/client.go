@@ -20,6 +20,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+
 	"github.com/labring/endpoints-operator/api/network/v1beta1"
 	"github.com/labring/endpoints-operator/client"
 	"github.com/labring/endpoints-operator/cmd/cepctl/app/options"
@@ -32,7 +34,6 @@ import (
 	cliflag "k8s.io/component-base/cli/flag"
 	"k8s.io/component-base/term"
 	"k8s.io/klog/v2"
-	"os"
 	"sigs.k8s.io/yaml"
 )
 
@@ -99,23 +100,6 @@ func run(s *options.Options, ctx context.Context) error {
 	if svc.Spec.Selector != nil && len(svc.Spec.Selector) != 0 {
 		return errors.New("not support selector not empty service")
 	}
-	ports := make([]v1beta1.ServicePort, len(svc.Spec.Ports))
-	for i, p := range svc.Spec.Ports {
-		enable := s.Probe
-		ports[i] = v1beta1.ServicePort{
-			Handler: v1beta1.Handler{
-				TCPSocket: &v1beta1.TCPSocketAction{Enable: enable},
-			},
-			TimeoutSeconds:   1,
-			SuccessThreshold: 1,
-			FailureThreshold: 3,
-			Name:             p.Name,
-			Protocol:         p.Protocol,
-			Port:             p.Port,
-			TargetPort:       p.TargetPort.IntVal,
-		}
-	}
-	cep.Spec.Ports = ports
 	cep.Spec.ClusterIP = svc.Spec.ClusterIP
 	ep, _ := cli.Kubernetes().CoreV1().Endpoints(s.Namespace).Get(ctx, s.Name, v1opts.GetOptions{})
 	if ep != nil {
@@ -123,7 +107,33 @@ func run(s *options.Options, ctx context.Context) error {
 		if len(ep.Subsets) > 1 {
 			return errors.New("not support endpoint subsets length more than 1. Please spilt it")
 		}
-		cep.Spec.Hosts = convertAddress(ep.Subsets[0].Addresses)
+		ports := make([]v1beta1.ServicePort, 0)
+		for _, subset := range ep.Subsets {
+			enable := s.Probe
+
+			ips := make([]string, 0)
+			for _, addr := range subset.Addresses {
+				ips = append(ips, addr.IP)
+			}
+
+			for _, port := range subset.Ports {
+				ports = append(ports, v1beta1.ServicePort{
+					Handler: v1beta1.Handler{
+						TCPSocket: &v1beta1.TCPSocketAction{Enable: enable},
+					},
+					TimeoutSeconds:   1,
+					SuccessThreshold: 1,
+					FailureThreshold: 3,
+					Name:             port.Name,
+					Protocol:         port.Protocol,
+					Port:             findPortInSvc(svc, port.Name),
+					TargetPort:       port.Port,
+					Hosts:            ips,
+				})
+			}
+
+		}
+		cep.Spec.Ports = ports
 	}
 	configJson, _ := json.Marshal(cep)
 	configYaml, _ := yaml.Marshal(cep)
@@ -142,10 +152,14 @@ func run(s *options.Options, ctx context.Context) error {
 	return c.CreateCR(ctx, cep)
 }
 
-func convertAddress(addresses []v1.EndpointAddress) []string {
-	eas := make([]string, 0)
-	for _, s := range addresses {
-		eas = append(eas, s.IP)
+func findPortInSvc(svc *v1.Service, portName string) int32 {
+
+	if svc != nil {
+		for _, p := range svc.Spec.Ports {
+			if p.Name == portName {
+				return p.Port
+			}
+		}
 	}
-	return eas
+	return 0
 }

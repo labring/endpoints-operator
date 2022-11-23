@@ -18,6 +18,7 @@ package exec
 
 import (
 	"bytes"
+
 	"github.com/labring/endpoints-operator/library/ioutils"
 	"github.com/labring/endpoints-operator/library/probe"
 

@@ -17,9 +17,10 @@ limitations under the License.
 package test
 
 import (
+	"testing"
+
 	"github.com/labring/endpoints-operator/api/network/v1beta1"
 	"github.com/labring/endpoints-operator/test/testhelper"
-	"testing"
 )
 
 func TestAddCrs(t *testing.T) {

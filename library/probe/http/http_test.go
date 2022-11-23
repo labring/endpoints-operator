@@ -19,7 +19,6 @@ package http
 import (
 	"bytes"
 	"fmt"
-	"github.com/labring/endpoints-operator/library/probe"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -30,6 +29,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/labring/endpoints-operator/library/probe"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

@@ -15,9 +15,10 @@
 package metrics
 
 import (
+	"time"
+
 	"github.com/prometheus/client_golang/prometheus"
 	crmetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
-	"time"
 )
 
 // MetricsInfo Metrics contains Prometheus metrics

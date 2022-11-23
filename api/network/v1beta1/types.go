@@ -25,6 +25,7 @@ import (
 
 // ServicePort contains information on service's port.
 type ServicePort struct {
+	Hosts []string `json:"hosts,omitempty" patchStrategy:"merge" patchMergeKey:"host" protobuf:"bytes,3,rep,name=hosts"`
 	// The action taken to determine the health of a container
 	Handler `json:",inline" protobuf:"bytes,1,opt,name=handler"`
 	// Number of seconds after which the probe times out.
@@ -62,6 +63,24 @@ type ServicePort struct {
 	// target Pod's container ports. If this is not specified, the value
 	// of the 'port' field is used (an identity map).
 	TargetPort int32 `json:"targetPort" protobuf:"varint,10,opt,name=targetPort"`
+}
+
+func (sp *ServicePort) ToEndpointSubset(host string) v1.EndpointSubset {
+	s := make([]v1.EndpointPort, 0)
+	endPoint := v1.EndpointPort{
+		Name:     sp.Name,
+		Port:     sp.TargetPort,
+		Protocol: sp.Protocol,
+	}
+	s = append(s, endPoint)
+	return v1.EndpointSubset{
+		Addresses: []v1.EndpointAddress{
+			{
+				IP: host,
+			},
+		},
+		Ports: s,
+	}
 }
 
 // TCPSocketAction describes an action based on opening a socket
@@ -132,10 +151,8 @@ type Handler struct {
 
 // ClusterEndpointSpec defines the desired state of ClusterEndpoint
 type ClusterEndpointSpec struct {
-	ClusterIP string `json:"clusterIP,omitempty" protobuf:"bytes,1,opt,name=clusterIP"`
-
-	Ports []ServicePort `json:"ports,omitempty" patchStrategy:"merge" patchMergeKey:"port" protobuf:"bytes,2,rep,name=ports"`
-	Hosts []string      `json:"hosts,omitempty" patchStrategy:"merge" patchMergeKey:"host" protobuf:"bytes,3,rep,name=hosts"`
+	ClusterIP string        `json:"clusterIP,omitempty" protobuf:"bytes,1,opt,name=clusterIP"`
+	Ports     []ServicePort `json:"ports,omitempty" patchStrategy:"merge" patchMergeKey:"port" protobuf:"bytes,2,rep,name=ports"`
 	// How often (in seconds) to perform the probe.
 	// Default to 10 seconds. Minimum value is 1.
 	// +optional

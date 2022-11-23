@@ -19,10 +19,11 @@ package grpc
 import (
 	"context"
 	"fmt"
-	"github.com/labring/endpoints-operator/library/probe"
-	"github.com/labring/endpoints-operator/library/version"
 	"net"
 	"time"
+
+	"github.com/labring/endpoints-operator/library/probe"
+	"github.com/labring/endpoints-operator/library/version"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
