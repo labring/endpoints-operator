@@ -18,9 +18,10 @@ package controllers
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 	"sync"
+
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/labring/endpoints-operator/metrics"
 	"k8s.io/klog"
@@ -86,43 +87,30 @@ func (c *Reconciler) syncEndpoint(ctx context.Context, cep *v1beta1.ClusterEndpo
 	}
 	var updateError error = nil
 	if err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+
+		subsets, convertError := clusterEndpointConvertEndpointSubset(cep, c.RetryCount, c.MetricsInfo)
+
+		if convertError != nil && len(convertError) != 0 {
+			return ToAggregate(convertError)
+		}
 		ep := &corev1.Endpoints{}
 		ep.SetName(cep.Name)
 		ep.SetNamespace(cep.Namespace)
+
+		readObject := &corev1.Endpoints{}
+		if err := c.Client.Get(ctx, client.ObjectKeyFromObject(ep), readObject); err != nil {
+			return client.IgnoreNotFound(err)
+		} else {
+			foregroundDelete := metav1.DeletePropagationForeground
+			_ = c.Client.Delete(ctx, readObject, &client.DeleteOptions{PropagationPolicy: &foregroundDelete})
+		}
+
 		_, err := controllerutil.CreateOrUpdate(ctx, c.Client, ep, func() error {
 			ep.Labels = map[string]string{}
 			if err := controllerutil.SetControllerReference(cep, ep, c.scheme); err != nil {
 				return err
 			}
-			healthyHosts := make([]healthyHostAndPort, 0)
-			e := make([]error, 0)
-			for _, h := range cep.Spec.Hosts {
-				healthyPorts, errors := healthyCheck(h, cep, c.RetryCount, c.MetricsInfo)
-				if len(healthyPorts) > 0 {
-					healthyHosts = append(healthyHosts, healthyHostAndPort{
-						sps:  healthyPorts,
-						host: h,
-					})
-				}
-				subErr := ToAggregate(errors)
-				if subErr != nil && len(subErr.Errors()) != 0 {
-					e = append(e, fmt.Errorf(subErr.Error()))
-
-				}
-
-			}
-			if len(healthyHosts) != 0 {
-				subsets := make([]corev1.EndpointSubset, 0)
-				for _, subset := range healthyHosts {
-					subsets = append(subsets, subset.toEndpoint())
-				}
-				ep.Subsets = subsets
-			} else {
-				ep.Subsets = []corev1.EndpointSubset{}
-			}
-			if len(e) != 0 {
-				updateError = ToAggregate(e)
-			}
+			ep.Subsets = subsets
 			return nil
 		})
 		return err
@@ -149,123 +137,131 @@ func (c *Reconciler) syncEndpoint(ctx context.Context, cep *v1beta1.ClusterEndpo
 	}
 }
 
-func healthyCheck(host string, cep *v1beta1.ClusterEndpoint, retry int, metricsinfo *metrics.MetricsInfo) ([]v1beta1.ServicePort, []error) {
+func clusterEndpointConvertEndpointSubset(cep *v1beta1.ClusterEndpoint, retry int, metricsinfo *metrics.MetricsInfo) ([]corev1.EndpointSubset, []error) {
 	var wg sync.WaitGroup
 	var mx sync.Mutex
-	var data []v1beta1.ServicePort
+	var data []corev1.EndpointSubset
 	var errors []error
 	var pointList []metrics.Point
 
 	for _, p := range cep.Spec.Ports {
-		wg.Add(1)
-		go func(port v1beta1.ServicePort) {
-			defer wg.Done()
-			defer mx.Unlock()
-			if port.TimeoutSeconds == 0 {
-				port.TimeoutSeconds = 1
-			}
-			if port.SuccessThreshold == 0 {
-				port.SuccessThreshold = 1
-			}
-			if port.FailureThreshold == 0 {
-				port.FailureThreshold = 3
-			}
-			pro := &libv1.Probe{
-				TimeoutSeconds:   port.TimeoutSeconds,
-				SuccessThreshold: port.SuccessThreshold,
-				FailureThreshold: port.FailureThreshold,
-			}
-			if port.HTTPGet != nil {
-				// add metrics point
-				pointList = append(pointList, metrics.Point{
-					Name:              cep.Name,
-					Namespace:         cep.Namespace,
-					TargetHostAndPort: host + ":" + strconv.Itoa(int(port.TargetPort)),
-					ProbeType:         metrics.HTTP,
-				})
-				pro.HTTPGet = &libv1.HTTPGetAction{
-					Path:        port.HTTPGet.Path,
-					Port:        intstr.FromInt(int(port.TargetPort)),
-					Host:        host,
-					Scheme:      port.HTTPGet.Scheme,
-					HTTPHeaders: port.HTTPGet.HTTPHeaders,
+		for _, h := range p.Hosts {
+			wg.Add(1)
+			go func(port v1beta1.ServicePort, host string) {
+				defer wg.Done()
+				defer mx.Unlock()
+				if port.TimeoutSeconds == 0 {
+					port.TimeoutSeconds = 1
 				}
-			}
-			if port.TCPSocket != nil && port.TCPSocket.Enable {
-				// add metrics point
-				pointList = append(pointList, metrics.Point{
-					Name:              cep.Name,
-					Namespace:         cep.Namespace,
-					TargetHostAndPort: host + ":" + strconv.Itoa(int(port.TargetPort)),
-					ProbeType:         metrics.TCP,
-				})
-				pro.TCPSocket = &libv1.TCPSocketAction{
-					Port: intstr.FromInt(int(port.TargetPort)),
-					Host: host,
+				if port.SuccessThreshold == 0 {
+					port.SuccessThreshold = 1
 				}
-			}
-			if port.UDPSocket != nil && port.UDPSocket.Enable {
-				// add metrics point
-				pointList = append(pointList, metrics.Point{
-					Name:              cep.Name,
-					Namespace:         cep.Namespace,
-					TargetHostAndPort: host + ":" + strconv.Itoa(int(port.TargetPort)),
-					ProbeType:         metrics.UDP,
-				})
-				pro.UDPSocket = &libv1.UDPSocketAction{
-					Port: intstr.FromInt(int(port.TargetPort)),
-					Host: host,
-					Data: v1beta1.Int8ArrToByteArr(port.UDPSocket.Data),
+				if port.FailureThreshold == 0 {
+					port.FailureThreshold = 3
 				}
-			}
-			if port.GRPC != nil && port.GRPC.Enable {
-				// add metrics point
-				pointList = append(pointList, metrics.Point{
-					Name:              cep.Name,
-					Namespace:         cep.Namespace,
-					TargetHostAndPort: host + ":" + strconv.Itoa(int(port.TargetPort)),
-					ProbeType:         metrics.GRPC,
-				})
-				pro.GRPC = &libv1.GRPCAction{
-					Port:    port.TargetPort,
-					Host:    host,
-					Service: port.GRPC.Service,
+				pro := &libv1.Probe{
+					TimeoutSeconds:   port.TimeoutSeconds,
+					SuccessThreshold: port.SuccessThreshold,
+					FailureThreshold: port.FailureThreshold,
 				}
-			}
-			w := &work{p: pro, retry: retry}
-			for w.doProbe() {
-			}
-			mx.Lock()
-			err := w.err
+				if port.HTTPGet != nil {
+					// add metrics point
+					pointList = append(pointList, metrics.Point{
+						Name:              cep.Name,
+						Namespace:         cep.Namespace,
+						TargetHostAndPort: host + ":" + strconv.Itoa(int(port.TargetPort)),
+						ProbeType:         metrics.HTTP,
+					})
+					pro.HTTPGet = &libv1.HTTPGetAction{
+						Path:        port.HTTPGet.Path,
+						Port:        intstr.FromInt(int(port.TargetPort)),
+						Host:        host,
+						Scheme:      port.HTTPGet.Scheme,
+						HTTPHeaders: port.HTTPGet.HTTPHeaders,
+					}
+				}
+				if port.TCPSocket != nil && port.TCPSocket.Enable {
+					// add metrics point
+					pointList = append(pointList, metrics.Point{
+						Name:              cep.Name,
+						Namespace:         cep.Namespace,
+						TargetHostAndPort: host + ":" + strconv.Itoa(int(port.TargetPort)),
+						ProbeType:         metrics.TCP,
+					})
+					pro.TCPSocket = &libv1.TCPSocketAction{
+						Port: intstr.FromInt(int(port.TargetPort)),
+						Host: host,
+					}
+				}
+				if port.UDPSocket != nil && port.UDPSocket.Enable {
+					// add metrics point
+					pointList = append(pointList, metrics.Point{
+						Name:              cep.Name,
+						Namespace:         cep.Namespace,
+						TargetHostAndPort: host + ":" + strconv.Itoa(int(port.TargetPort)),
+						ProbeType:         metrics.UDP,
+					})
+					pro.UDPSocket = &libv1.UDPSocketAction{
+						Port: intstr.FromInt(int(port.TargetPort)),
+						Host: host,
+						Data: v1beta1.Int8ArrToByteArr(port.UDPSocket.Data),
+					}
+				}
+				if port.GRPC != nil && port.GRPC.Enable {
+					// add metrics point
+					pointList = append(pointList, metrics.Point{
+						Name:              cep.Name,
+						Namespace:         cep.Namespace,
+						TargetHostAndPort: host + ":" + strconv.Itoa(int(port.TargetPort)),
+						ProbeType:         metrics.GRPC,
+					})
+					pro.GRPC = &libv1.GRPCAction{
+						Port:    port.TargetPort,
+						Host:    host,
+						Service: port.GRPC.Service,
+					}
+				}
+				w := &work{p: pro, retry: retry}
+				for w.doProbe() {
+				}
+				mx.Lock()
+				err := w.err
 
-			var probe metrics.ProbeType
-			if w.p.ProbeHandler.Exec != nil {
-				probe = metrics.EXEC
-			} else if w.p.ProbeHandler.HTTPGet != nil {
-				probe = metrics.HTTP
-			} else if w.p.ProbeHandler.TCPSocket != nil {
-				probe = metrics.TCP
-			} else if w.p.ProbeHandler.UDPSocket != nil {
-				probe = metrics.UDP
-			} else if w.p.ProbeHandler.GRPC != nil {
-				probe = metrics.GRPC
-			}
-			klog.V(4).Info("[****] Probe is ", probe)
+				var probe metrics.ProbeType
+				if w.p.ProbeHandler.Exec != nil {
+					probe = metrics.EXEC
+				} else if w.p.ProbeHandler.HTTPGet != nil {
+					probe = metrics.HTTP
+				} else if w.p.ProbeHandler.TCPSocket != nil {
+					probe = metrics.TCP
+				} else if w.p.ProbeHandler.UDPSocket != nil {
+					probe = metrics.UDP
+				} else if w.p.ProbeHandler.GRPC != nil {
+					probe = metrics.GRPC
+				}
+				klog.V(4).Info("[****] Probe is ", probe)
 
-			if err != nil {
-				// add metrics point
-				metricsinfo.RecordFailedCheck(cep.Name, cep.Namespace, host+":"+strconv.Itoa(int(port.TargetPort)), string(probe))
-				errors = append(errors, err)
-			} else {
-				// add metrics point
-				metricsinfo.RecordSuccessfulCheck(cep.Name, cep.Namespace, host+":"+strconv.Itoa(int(port.TargetPort)), string(probe))
-				data = append(data, port)
-			}
-		}(p)
+				if err != nil {
+					// add metrics point
+					if metricsinfo != nil {
+						metricsinfo.RecordFailedCheck(cep.Name, cep.Namespace, host+":"+strconv.Itoa(int(port.TargetPort)), string(probe))
+					}
+					errors = append(errors, err)
+				} else {
+					// add metrics point
+					if metricsinfo != nil {
+						metricsinfo.RecordSuccessfulCheck(cep.Name, cep.Namespace, host+":"+strconv.Itoa(int(port.TargetPort)), string(probe))
+					}
+					data = append(data, port.ToEndpointSubset(host))
+				}
+			}(p, h)
+		}
 	}
 	wg.Wait()
 	for _, point := range pointList {
-		metricsinfo.RecordCheck(point.Name, point.Namespace, point.TargetHostAndPort, string(point.ProbeType))
+		if metricsinfo != nil {
+			metricsinfo.RecordCheck(point.Name, point.Namespace, point.TargetHostAndPort, string(point.ProbeType))
+		}
 		//metricsinfo.RecordCeps(checkdata.NsName)
 	}
 	return data, errors

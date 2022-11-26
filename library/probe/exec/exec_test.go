@@ -18,10 +18,11 @@ package exec
 
 import (
 	"fmt"
-	"github.com/labring/endpoints-operator/library/probe"
 	"io"
 	"strings"
 	"testing"
+
+	"github.com/labring/endpoints-operator/library/probe"
 )
 
 type FakeCmd struct {

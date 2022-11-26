@@ -18,11 +18,12 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"path"
+	"strings"
+
 	"github.com/labring/endpoints-operator/library/file"
 	cliflag "k8s.io/component-base/cli/flag"
 	"k8s.io/klog/v2"
-	"path"
-	"strings"
 )
 
 type Options struct {

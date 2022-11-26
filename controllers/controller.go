@@ -18,8 +18,9 @@ package controllers
 
 import (
 	"context"
-	"github.com/labring/endpoints-operator/metrics"
 	"time"
+
+	"github.com/labring/endpoints-operator/metrics"
 
 	"github.com/go-logr/logr"
 	"github.com/labring/endpoints-operator/api/network/v1beta1"

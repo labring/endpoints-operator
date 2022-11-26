@@ -17,8 +17,9 @@ limitations under the License.
 package main
 
 import (
-	"github.com/labring/endpoints-operator/cmd/endpoints-operator/app"
 	"os"
+
+	"github.com/labring/endpoints-operator/cmd/endpoints-operator/app"
 )
 
 func main() {

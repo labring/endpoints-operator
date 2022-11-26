@@ -109,14 +109,18 @@ func ToAggregate(list []error) utilerrors.Aggregate {
 
 func convertServicePorts(sps []v1beta1.ServicePort) []v1.ServicePort {
 	s := make([]v1.ServicePort, 0)
+	set := sets.NewString()
 	for _, sp := range sps {
-		endPoint := v1.ServicePort{
-			Name:       sp.Name,
-			Port:       sp.Port,
-			Protocol:   sp.Protocol,
-			TargetPort: intstr.FromInt(int(sp.TargetPort)),
+		if !set.Has(sp.Name) {
+			set = set.Insert(sp.Name)
+			endPoint := v1.ServicePort{
+				Name:       sp.Name,
+				Port:       sp.Port,
+				Protocol:   sp.Protocol,
+				TargetPort: intstr.FromString(sp.Name),
+			}
+			s = append(s, endPoint)
 		}
-		s = append(s, endPoint)
 	}
 	return s
 }

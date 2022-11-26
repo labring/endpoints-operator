@@ -17,12 +17,13 @@ package testhelper
 import (
 	"context"
 	"fmt"
+	"sync"
+	"testing"
+
 	"github.com/labring/endpoints-operator/api/network/v1beta1"
 	"github.com/labring/endpoints-operator/client"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"sync"
-	"testing"
 )
 
 var once sync.Once

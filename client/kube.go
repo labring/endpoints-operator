@@ -15,13 +15,14 @@
 package client
 
 import (
+	"os"
+	"path"
+
 	"github.com/labring/endpoints-operator/library/file"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	"os"
-	"path"
 )
 
 type Client interface {

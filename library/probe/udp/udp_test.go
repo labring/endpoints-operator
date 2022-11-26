@@ -15,11 +15,12 @@
 package udp
 
 import (
-	"github.com/labring/endpoints-operator/library/probe"
 	"net"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/labring/endpoints-operator/library/probe"
 )
 
 const maxBufferSize = 1024

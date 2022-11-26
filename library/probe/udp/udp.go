@@ -17,11 +17,12 @@ limitations under the License.
 package udp
 
 import (
-	"github.com/labring/endpoints-operator/library/probe"
-	"k8s.io/klog/v2"
 	"net"
 	"strconv"
 	"time"
+
+	"github.com/labring/endpoints-operator/library/probe"
+	"k8s.io/klog/v2"
 )
 
 // New creates Prober.

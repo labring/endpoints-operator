@@ -17,13 +17,14 @@ limitations under the License.
 package tcp
 
 import (
-	"github.com/labring/endpoints-operator/library/probe"
 	"net"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/labring/endpoints-operator/library/probe"
 )
 
 func TestTcpHealthChecker(t *testing.T) {

@@ -17,10 +17,11 @@ package controller
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/util/retry"
-	"strings"
 
 	"github.com/go-logr/logr"
 	"github.com/labring/endpoints-operator/library/convert"

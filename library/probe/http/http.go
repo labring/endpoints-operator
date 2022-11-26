@@ -20,13 +20,14 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"net/http"
+	"net/url"
+	"time"
+
 	"github.com/labring/endpoints-operator/library/io"
 	"github.com/labring/endpoints-operator/library/probe"
 	"github.com/labring/endpoints-operator/library/version"
 	"k8s.io/klog/v2"
-	"net/http"
-	"net/url"
-	"time"
 
 	utilnet "k8s.io/apimachinery/pkg/util/net"
 )
