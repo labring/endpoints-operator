@@ -1,3 +1,17 @@
 domain: sealos.io
-repo: endpoints-operator
-version: "2"
+layout:
+- go.kubebuilder.io/v3
+multigroup: true
+projectName: endpoints-operator
+repo: github.com/labring/endpoints-operator
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: sealos.io
+  group: network
+  kind: ClusterEndpoint
+  path: github.com/labring/endpoints-operator/apis/network/v1beta1
+  version: v1beta1
+version: "3"

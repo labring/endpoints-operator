@@ -23,7 +23,7 @@ import (
 	"github.com/labring/endpoints-operator/metrics"
 
 	"github.com/go-logr/logr"
-	"github.com/labring/endpoints-operator/api/network/v1beta1"
+	"github.com/labring/endpoints-operator/apis/network/v1beta1"
 	"github.com/labring/endpoints-operator/library/controller"
 	"github.com/labring/endpoints-operator/library/convert"
 	corev1 "k8s.io/api/core/v1"
