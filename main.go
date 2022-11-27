@@ -14,21 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package test
+// need using kubebuilder generator it.
+// DO NOT EDIT.
 
-import (
-	"testing"
-
-	"github.com/labring/endpoints-operator/apis/network/v1beta1"
-	"github.com/labring/endpoints-operator/test/testhelper"
-)
-
-func TestAddCrs(t *testing.T) {
-	cep := &v1beta1.ClusterEndpoint{}
-	cep.Namespace = "default"
-	testhelper.CreateTestCRs(10, "sealos", cep, t)
-}
-
-func TestDeleteCrs(t *testing.T) {
-	testhelper.DeleteTestCRs("sealos", "default", t)
-}
+package endpoints_operator

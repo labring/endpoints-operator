@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/labring/endpoints-operator/api/network/v1beta1"
+	"github.com/labring/endpoints-operator/apis/network/v1beta1"
 	"github.com/labring/endpoints-operator/client"
 	"github.com/labring/endpoints-operator/cmd/cepctl/app/options"
 	"github.com/labring/endpoints-operator/library/version"
@@ -96,9 +96,6 @@ func run(s *options.Options, ctx context.Context) error {
 	klog.V(4).InfoS("get service", "name", s.Name, "namespace", s.Namespace, "spec", svc.Spec)
 	if svc.Spec.ClusterIP == v1.ClusterIPNone {
 		return errors.New("not support clusterIP=None service")
-	}
-	if svc.Spec.Selector != nil && len(svc.Spec.Selector) != 0 {
-		return errors.New("not support selector not empty service")
 	}
 	cep.Spec.ClusterIP = svc.Spec.ClusterIP
 	ep, _ := cli.Kubernetes().CoreV1().Endpoints(s.Namespace).Get(ctx, s.Name, v1opts.GetOptions{})

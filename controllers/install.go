@@ -17,7 +17,7 @@ limitations under the License.
 package controllers
 
 import (
-	"github.com/labring/endpoints-operator/api/network/v1beta1"
+	"github.com/labring/endpoints-operator/apis/network/v1beta1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	k8sruntime "k8s.io/apimachinery/pkg/util/runtime"

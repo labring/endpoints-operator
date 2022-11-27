@@ -17,7 +17,7 @@ package client
 import (
 	"context"
 
-	"github.com/labring/endpoints-operator/api/network/v1beta1"
+	"github.com/labring/endpoints-operator/apis/network/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
