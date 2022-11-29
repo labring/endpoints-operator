@@ -41,8 +41,8 @@ jobs:
           destination: ./_site
       - name: Helm package
         run: |
-          wget https://github.com/labring/endpoints-operator/releases/download/v0.2.0/endpoints-operator-0.2.0.tgz
-          helm repo index . --url https://github.com/labring/endpoints-operator/releases/download/v0.2.0
+          wget https://github.com/labring/endpoints-operator/releases/download/v0.2.1/endpoints-operator-0.2.1.tgz
+          helm repo index . --url https://github.com/labring/endpoints-operator/releases/download/v0.2.1
           sudo cp  index.yaml _site/
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1

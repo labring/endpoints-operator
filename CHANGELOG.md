@@ -18,3 +18,8 @@
 
 - 所有的domain更正为sealos.io
 - FixBug #86 不支持clusterIP=None
+
+## [v0.2.1](#v0.2.1)
+
+- FixBug #103  endpoint 无法更新的问题
+
