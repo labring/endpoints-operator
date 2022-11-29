@@ -6,6 +6,7 @@
 
 - v0.1.1 版本的数据是sealyun.com的domain
 - v0.2.0 之后所有的domain都是sealos.io
+- v0.2.1 调整了Hosts配置，升级需要注意一下
 
 也可以手动执行一下脚本,namespace为xxx
 ```shell
@@ -56,7 +57,7 @@ helm install -n kube-system endpoints-operator endpoints-operator/endpoints-oper
 ## sealos 安装
 
 ```bash
-sealos run labring/endpoints-operator:v0.2.0
+sealos run labring/endpoints-operator:v0.2.1
 ```
 
 ## Usage
@@ -69,10 +70,14 @@ metadata:
   namespace: default
 spec:
   hosts:
-    - 172.18.191.215
+    
   periodSeconds: 10
   ports:
     - name: wp-https
+      hosts:
+        ## 端口相同的hosts
+        - 10.33.40.151
+        - 10.33.40.152
       protocol: TCP
       port: 38081
       targetPort: 443
@@ -82,6 +87,10 @@ spec:
       failureThreshold: 3
       successThreshold: 1
     - name: wp-http
+      hosts:
+        ## 端口相同的hosts
+        - 10.33.40.151
+        - 10.33.40.152
       protocol: TCP
       port: 38082
       targetPort: 80
@@ -92,6 +101,10 @@ spec:
       failureThreshold: 3
       successThreshold: 1      
     - name: wp-udp
+      hosts:
+        ## 端口相同的hosts
+        - 10.33.40.151
+        - 10.33.40.152
       protocol: UDP
       port: 38003
       targetPort: 1234
@@ -102,6 +115,10 @@ spec:
       failureThreshold: 3
       successThreshold: 1
     - name: wp-grpc
+      hosts:
+        ## 端口相同的hosts
+        - 10.33.40.151
+        - 10.33.40.152
       protocol: TCP
       port: 38083
       targetPort: 8080
