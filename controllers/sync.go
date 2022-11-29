@@ -83,13 +83,13 @@ func (c *Reconciler) syncEndpoint(ctx context.Context, cep *v1beta1.ClusterEndpo
 		Reason:             string(v1beta1.SyncEndpointReady),
 		Message:            "sync endpoint successfully",
 	}
-	var updateError error = nil
+	var syncError error = nil
 	if err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 
 		subsets, convertError := clusterEndpointConvertEndpointSubset(cep, c.RetryCount, c.MetricsInfo)
 
 		if convertError != nil && len(convertError) != 0 {
-			return ToAggregate(convertError)
+			syncError = ToAggregate(convertError)
 		}
 		ep := &corev1.Endpoints{}
 		ep.SetName(cep.Name)
@@ -113,13 +113,13 @@ func (c *Reconciler) syncEndpoint(ctx context.Context, cep *v1beta1.ClusterEndpo
 		c.Logger.V(4).Info("error updating endpoint", "name", cep.Name, "msg", err.Error())
 		return
 	}
-	if updateError != nil {
+	if syncError != nil {
 		endpointCondition.LastHeartbeatTime = metav1.Now()
 		endpointCondition.Status = corev1.ConditionFalse
 		endpointCondition.Reason = "EndpointSyncPortError"
-		endpointCondition.Message = updateError.Error()
+		endpointCondition.Message = syncError.Error()
 		c.updateCondition(cep, endpointCondition)
-		c.Logger.V(4).Info("error healthy endpoint", "name", cep.Name, "msg", updateError.Error())
+		c.Logger.V(4).Info("error healthy endpoint", "name", cep.Name, "msg", syncError.Error())
 		return
 	}
 	if !isConditionTrue(cep, v1beta1.SyncEndpointReady) {
