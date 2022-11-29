@@ -21,8 +21,6 @@ import (
 	"strconv"
 	"sync"
 
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
 	"github.com/labring/endpoints-operator/metrics"
 	"k8s.io/klog"
 
@@ -96,14 +94,6 @@ func (c *Reconciler) syncEndpoint(ctx context.Context, cep *v1beta1.ClusterEndpo
 		ep := &corev1.Endpoints{}
 		ep.SetName(cep.Name)
 		ep.SetNamespace(cep.Namespace)
-
-		readObject := &corev1.Endpoints{}
-		if err := c.Client.Get(ctx, client.ObjectKeyFromObject(ep), readObject); err != nil {
-			return client.IgnoreNotFound(err)
-		} else {
-			foregroundDelete := metav1.DeletePropagationForeground
-			_ = c.Client.Delete(ctx, readObject, &client.DeleteOptions{PropagationPolicy: &foregroundDelete})
-		}
 
 		_, err := controllerutil.CreateOrUpdate(ctx, c.Client, ep, func() error {
 			ep.Labels = map[string]string{}
