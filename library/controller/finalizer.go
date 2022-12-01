@@ -25,8 +25,8 @@ import (
 )
 
 type Finalizer struct {
-	client.Client
-	FinalizerName string
+	client        client.Client
+	finalizerName string
 }
 
 func (f *Finalizer) AddFinalizer(ctx context.Context, obj client.Object) (bool, error) {
@@ -36,7 +36,7 @@ func (f *Finalizer) AddFinalizer(ctx context.Context, obj client.Object) (bool, 
 		// then lets add the finalizer and update the object. This is equivalent
 		// registering our finalizer.
 		notDelete = true
-		controllerutil.AddFinalizer(obj, f.FinalizerName)
+		controllerutil.AddFinalizer(obj, f.finalizerName)
 		if err := f.updateFinalizers(ctx, client.ObjectKeyFromObject(obj), obj, obj.GetFinalizers()); err != nil {
 			return notDelete, err
 		}
@@ -49,17 +49,24 @@ func DefaultFunc(ctx context.Context, obj client.Object) error {
 	return nil
 }
 
+func NewFinalizer(client client.Client, finalizerName string) *Finalizer {
+	return &Finalizer{
+		client:        client,
+		finalizerName: finalizerName,
+	}
+}
+
 func (f *Finalizer) RemoveFinalizer(ctx context.Context, obj client.Object, fun func(ctx context.Context, obj client.Object) error) (bool, error) {
 	var deleteBool bool
 	if obj.GetDeletionTimestamp() != nil && !obj.GetDeletionTimestamp().IsZero() {
 		deleteBool = true
-		if controllerutil.ContainsFinalizer(obj, f.FinalizerName) {
+		if controllerutil.ContainsFinalizer(obj, f.finalizerName) {
 			// our finalizer is present, so lets handle any external dependency
 			if err := fun(ctx, obj); err != nil {
 				return deleteBool, err
 			}
 
-			controllerutil.RemoveFinalizer(obj, f.FinalizerName)
+			controllerutil.RemoveFinalizer(obj, f.finalizerName)
 			if err := f.updateFinalizers(ctx, client.ObjectKeyFromObject(obj), obj, obj.GetFinalizers()); err != nil {
 				return deleteBool, err
 			}
@@ -74,13 +81,13 @@ func (f *Finalizer) updateFinalizers(ctx context.Context, objectKey client.Objec
 		fetchObject := &unstructured.Unstructured{}
 		fetchObject.SetAPIVersion(gvk.GroupVersion().String())
 		fetchObject.SetKind(gvk.Kind)
-		err := f.Client.Get(ctx, objectKey, fetchObject)
+		err := f.client.Get(ctx, objectKey, fetchObject)
 		if err != nil {
 			// We log this error, but we continue and try to set the ownerRefs on the other resources.
 			return err
 		}
 		fetchObject.SetFinalizers(finalizers)
-		err = f.Client.Update(ctx, fetchObject)
+		err = f.client.Update(ctx, fetchObject)
 		if err != nil {
 			// We log this error, but we continue and try to set the ownerRefs on the other resources.
 			return err
