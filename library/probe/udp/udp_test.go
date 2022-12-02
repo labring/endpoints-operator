@@ -110,7 +110,7 @@ func TestUDPProbe(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1, err := DoUDPProbe(tt.args.addr, tt.args.testData, tt.args.timeout)
+			got, got1, err := DoUDPProbe(tt.args.addr, []byte(tt.args.testData), tt.args.timeout)
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("DoUDPProbe() error = %v, wantErr %v", err, tt.wantErr)
