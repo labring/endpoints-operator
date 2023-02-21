@@ -48,7 +48,8 @@ func (c *Reconciler) syncService(ctx context.Context, cep *v1beta1.ClusterEndpoi
 		svc.SetName(cep.Name)
 		svc.SetNamespace(cep.Namespace)
 		_, err := controllerutil.CreateOrUpdate(ctx, c.Client, svc, func() error {
-			svc.Labels = map[string]string{}
+			svc.Labels = cep.Labels
+			svc.Annotations = cep.Annotations
 			if err := controllerutil.SetControllerReference(cep, svc, c.scheme); err != nil {
 				return err
 			}
