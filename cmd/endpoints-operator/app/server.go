@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"sync"
 
 	"github.com/labring/endpoints-operator/cmd/endpoints-operator/app/options"
 	"github.com/labring/endpoints-operator/controllers"
@@ -33,7 +34,6 @@ import (
 	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
-	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
 )
 
 var (
@@ -57,7 +57,9 @@ func NewCommand() *cobra.Command {
 				klog.Error(utilerrors.NewAggregate(errs))
 				os.Exit(1)
 			}
-			if err := run(s, signals.SetupSignalHandler()); err != nil {
+			ctx, cancel := context.WithCancel(context.TODO())
+			defer cancel()
+			if err := run(s, ctx); err != nil {
 				klog.Error(err)
 				os.Exit(1)
 			}
@@ -145,8 +147,23 @@ func run(s *options.Options, ctx context.Context) error {
 		klog.Fatal(err, "problem running manager readiness check")
 	}
 
-	if err = mgr.Start(ctx); err != nil {
-		klog.Fatalf("unable to run the manager: %v", err)
-	}
+	go func() {
+		klog.Info("starting manager")
+		if err := mgr.Start(ctx); err != nil {
+			klog.Fatalf("unable to run the manager: %v", err)
+			os.Exit(1)
+		}
+	}()
+	done := make(chan struct{})
+	go func() {
+		if mgr.GetCache().WaitForCacheSync(context.Background()) {
+			done <- struct{}{}
+		}
+	}()
+	<-done
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	wg.Wait()
 	return nil
 }
