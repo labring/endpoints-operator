@@ -68,7 +68,7 @@ func (c *Reconciler) syncService(ctx context.Context, cep *v1beta1.ClusterEndpoi
 		serviceCondition.Reason = "ServiceSyncError"
 		serviceCondition.Message = err.Error()
 		c.updateCondition(cep, serviceCondition)
-		c.Logger.V(4).Info("error updating service", "name", cep.Name, "msg", err.Error())
+		c.logger.V(4).Info("error updating service", "name", cep.Name, "msg", err.Error())
 		return
 	}
 	if !isConditionTrue(cep, v1beta1.SyncServiceReady) {
@@ -111,7 +111,7 @@ func (c *Reconciler) syncEndpoint(ctx context.Context, cep *v1beta1.ClusterEndpo
 		endpointCondition.Reason = "EndpointSyncError"
 		endpointCondition.Message = err.Error()
 		c.updateCondition(cep, endpointCondition)
-		c.Logger.V(4).Info("error updating endpoint", "name", cep.Name, "msg", err.Error())
+		c.logger.V(4).Info("error updating endpoint", "name", cep.Name, "msg", err.Error())
 		return
 	}
 	if syncError != nil {
@@ -120,7 +120,7 @@ func (c *Reconciler) syncEndpoint(ctx context.Context, cep *v1beta1.ClusterEndpo
 		endpointCondition.Reason = "EndpointSyncPortError"
 		endpointCondition.Message = syncError.Error()
 		c.updateCondition(cep, endpointCondition)
-		c.Logger.V(4).Info("error healthy endpoint", "name", cep.Name, "msg", syncError.Error())
+		c.logger.V(4).Info("error healthy endpoint", "name", cep.Name, "msg", syncError.Error())
 		return
 	}
 	if !isConditionTrue(cep, v1beta1.SyncEndpointReady) {

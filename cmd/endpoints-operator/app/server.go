@@ -116,15 +116,17 @@ func run(s *options.Options, ctx context.Context) error {
 	controllers.Install(scheme)
 	clusterReconciler := &controllers.Reconciler{}
 	if s.MaxConcurrent > 0 {
-		clusterReconciler.WorkNum = s.MaxConcurrent
+		clusterReconciler.MaxConcurrent = s.MaxConcurrent
 	} else {
-		clusterReconciler.WorkNum = 1
+		clusterReconciler.MaxConcurrent = 1
 	}
 	if s.MaxRetry > 0 {
 		clusterReconciler.RetryCount = s.MaxRetry
 	} else {
 		clusterReconciler.RetryCount = 1
 	}
+
+	clusterReconciler.RateLimiter = options.GetRateLimiter(s.RateLimiterOptions)
 
 	clusterReconciler.MetricsInfo = metricsInfo
 

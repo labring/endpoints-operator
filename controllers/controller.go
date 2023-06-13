@@ -19,6 +19,9 @@ package controllers
 import (
 	"context"
 	"errors"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"sigs.k8s.io/controller-runtime/pkg/ratelimiter"
 	"time"
 
 	"github.com/labring/endpoints-operator/metrics"
@@ -31,7 +34,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	runtimecontroller "sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
@@ -46,18 +48,18 @@ const (
 // Reconciler reconciles a Service object
 type Reconciler struct {
 	client.Client
-	Logger      logr.Logger
-	Recorder    record.EventRecorder
-	cache       cache.Cache
-	scheme      *runtime.Scheme
-	RetryCount  int
-	WorkNum     int
-	MetricsInfo *metrics.MetricsInfo
-	finalizer   *controller.Finalizer
+	logger        logr.Logger
+	recorder      record.EventRecorder
+	scheme        *runtime.Scheme
+	finalizer     *controller.Finalizer
+	RetryCount    int
+	MaxConcurrent int
+	MetricsInfo   *metrics.MetricsInfo
+	RateLimiter   ratelimiter.RateLimiter
 }
 
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	r.Logger.V(4).Info("start reconcile for ceps")
+	r.logger.V(4).Info("start reconcile for ceps")
 	cep := &v1beta1.ClusterEndpoint{}
 	if err := r.Get(ctx, req.NamespacedName, cep); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
@@ -71,7 +73,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		if err != nil {
 			return ctrl.Result{}, err
 		} else {
-			return r.Update(ctx, cep)
+			return r.reconcile(ctx, cep)
 		}
 	}
 	return ctrl.Result{}, errors.New("reconcile error from Finalizer")
@@ -81,35 +83,37 @@ func (c *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	if c.Client == nil {
 		c.Client = mgr.GetClient()
 	}
-	if c.Logger == nil {
-		c.Logger = log.Log.WithName(controllerName)
+	if c.logger == nil {
+		c.logger = log.Log.WithName(controllerName)
 	}
-	if c.Recorder == nil {
-		c.Recorder = mgr.GetEventRecorderFor(controllerName)
+	if c.recorder == nil {
+		c.recorder = mgr.GetEventRecorderFor(controllerName)
 	}
 	if c.finalizer == nil {
 		c.finalizer = controller.NewFinalizer(c.Client, "sealos.io/cluster-endpoints.finalizers")
 	}
 	c.scheme = mgr.GetScheme()
-	c.cache = mgr.GetCache()
-	c.Logger.V(4).Info("init reconcile controller service")
+	c.logger.V(4).Info("init reconcile controller service")
 	owner := &handler.EnqueueRequestForOwner{OwnerType: &v1beta1.ClusterEndpoint{}, IsController: false}
-	return ctrl.NewControllerManagedBy(mgr).WithEventFilter(&ResourceChangedPredicate{}).
-		Watches(&source.Kind{Type: &corev1.Service{}}, owner).WithOptions(runtimecontroller.Options{MaxConcurrentReconciles: c.WorkNum}).
-		For(&v1beta1.ClusterEndpoint{}).Complete(c)
+
+	return ctrl.NewControllerManagedBy(mgr).
+		For(&v1beta1.ClusterEndpoint{}, builder.WithPredicates(
+			predicate.Or(predicate.GenerationChangedPredicate{}))).
+		Watches(&source.Kind{Type: &corev1.Service{}}, owner).
+		WithOptions(runtimecontroller.Options{
+			MaxConcurrentReconciles: c.MaxConcurrent,
+			RateLimiter:             c.RateLimiter,
+		}).
+		Complete(c)
 }
 
-func (c *Reconciler) Update(ctx context.Context, obj client.Object) (ctrl.Result, error) {
-	c.Logger.V(4).Info("update reconcile controller service", "request", client.ObjectKeyFromObject(obj))
+func (c *Reconciler) reconcile(ctx context.Context, obj client.Object) (ctrl.Result, error) {
+	c.logger.V(4).Info("update reconcile controller service", "request", client.ObjectKeyFromObject(obj))
 	cep, ok := obj.(*v1beta1.ClusterEndpoint)
 	if !ok {
 		return ctrl.Result{}, errors.New("obj convert cep is error")
 	}
 
-	return c.UpdateStatus(ctx, cep)
-}
-
-func (c *Reconciler) UpdateStatus(ctx context.Context, cep *v1beta1.ClusterEndpoint) (ctrl.Result, error) {
 	initializedCondition := v1beta1.Condition{
 		Type:               v1beta1.Initialized,
 		Status:             corev1.ConditionTrue,
@@ -126,11 +130,11 @@ func (c *Reconciler) UpdateStatus(ctx context.Context, cep *v1beta1.ClusterEndpo
 	c.syncService(ctx, cep)
 	c.syncEndpoint(ctx, cep)
 
-	c.Logger.V(4).Info("update finished reconcile controller service", "request", client.ObjectKeyFromObject(cep))
+	c.logger.V(4).Info("update finished reconcile controller service", "request", client.ObjectKeyFromObject(cep))
 	c.syncFinalStatus(cep)
 	err := c.updateStatus(ctx, client.ObjectKeyFromObject(cep), &cep.Status)
 	if err != nil {
-		c.Recorder.Eventf(cep, corev1.EventTypeWarning, "SyncStatus", "Sync status %s is error: %v", cep.Name, err)
+		c.recorder.Eventf(cep, corev1.EventTypeWarning, "SyncStatus", "Sync status %s is error: %v", cep.Name, err)
 		return ctrl.Result{}, err
 	}
 	sec := time.Duration(cep.Spec.PeriodSeconds) * time.Second

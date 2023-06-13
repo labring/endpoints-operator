@@ -33,6 +33,7 @@ type Options struct {
 	LeaderElectionResourceLock string
 	MaxConcurrent              int
 	MaxRetry                   int
+	RateLimiterOptions         RateLimiterOptions
 }
 
 func NewOptions() *Options {
@@ -73,7 +74,7 @@ func (s *Options) Flags() cliflag.NamedFlagSets {
 		"which can be run. Defaults to 1.")
 	mc.IntVar(&s.MaxRetry, "maxretry", 1, "MaxRetry this is the maximum number of retry liveliness "+
 		"which can be run. Defaults to 1.")
-
+	s.RateLimiterOptions.BindFlags(flag.CommandLine)
 	return fss
 }
 
