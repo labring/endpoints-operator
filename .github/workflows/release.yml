@@ -32,7 +32,9 @@ jobs:
 
       - name: Helm package
         run: |
-          sed -i "s#latest#${{ steps.prepare.outputs.tag_name }}#g" config/charts/endpoints-operator/values.yaml
+          latest_release=${{ steps.prepare.outputs.tag_name }}
+          sed -i "s#latest#${latest_release}#g" config/charts/endpoints-operator/values.yaml
+          sed -i "s#0.0.0#${latest_release#v}#g" config/charts/endpoints-operator/Chart.yaml
           helm package config/charts/endpoints-operator 
           git checkout .
 
