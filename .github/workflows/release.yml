@@ -98,5 +98,14 @@ jobs:
             -f dockerfiles/cepctl/Dockerfile \
             .
 
-  call_ci_workflow:
-    uses: ./.github/workflows/pages.yml
+  trigger-workflow-build-helm-chart:
+    needs: [ goreleaser ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set env
+        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+      - name: Trigger cluster image workflow
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          event-type: release_success
+          client-payload: '{"ref": "${{ github.ref }}", "sha": "${{ github.sha }}", "version": "${{ env.RELEASE_VERSION }}"}'
