@@ -39,7 +39,7 @@ jobs:
       - name: Helm package
         run: |
           if [[ "${{ github.event_name }}" == "repository_dispatch" ]]; then
-            bash helm.sh ${{ github.event.client_payload.ref }}
+            bash helm.sh ${{ github.event.client_payload.version }}
           elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             bash helm.sh
           fi
