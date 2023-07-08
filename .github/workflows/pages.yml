@@ -2,10 +2,6 @@
 name: Deploy Jekyll with GitHub Pages dependencies preinstalled
 
 on:
-  # Runs on pushes targeting the default branch
-  push:
-    branches: ["main"]
-
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
   repository_dispatch:
@@ -42,7 +38,11 @@ jobs:
           destination: ./_site
       - name: Helm package
         run: |
-          bash helm.sh
+          if [[ "${{ github.event_name }}" == "repository_dispatch" ]]; then
+            bash helm.sh ${{ github.event.client_payload.ref }}
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            bash helm.sh
+          fi
           sudo cp  index.yaml _site/
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
