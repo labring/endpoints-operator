@@ -100,5 +100,3 @@ jobs:
 
   call_ci_workflow:
     uses: ./.github/workflows/pages.yml
-    with:
-      arch: amd64,arm64
