@@ -1,4 +1,4 @@
-name: Github Rebot
+name: Github Robot
 on:
   issue_comment:
     types:
@@ -12,7 +12,7 @@ jobs:
     steps:
       - name: Checkout the latest code
         uses: actions/checkout@v3
-      - name: Gh Rebot for Sealos
+      - name: Gh Robot for Sealos
         uses: labring/robot@v2.0.0
         with:
           version: v2.0.0
