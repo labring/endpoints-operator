@@ -49,9 +49,9 @@ endpoints-operator是一个云原生、高可靠性、高性能、面向K8s内�
 ## helm 安装
 
 ```bash
-helm repo add endpoints-operator https://labring.github.io/endpoints-operator/
-helm repo update endpoints-operator 
-helm install -n kube-system endpoints-operator endpoints-operator/endpoints-operator
+VERSION="0.2.1"
+wget https://github.com/labring/endpoints-operator/releases/download/v${VERSION}/endpoints-operator-${VERSION}.tgz
+helm install -n kube-system endpoints-operator ./endpoints-operator-${VERSION}.tgz
 ```
 
 ## sealos 安装
