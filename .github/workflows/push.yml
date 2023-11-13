@@ -48,9 +48,9 @@ jobs:
         run: |
           docker buildx build \
             --platform linux/amd64,linux/arm64 \
-            --build-arg VERSION=dev \
+            --build-arg VERSION=latest \
             --push \
-            -t ${DOCKER_REPO}:dev \
+            -t ${DOCKER_REPO}:latest \
             -f dockerfiles/endpoints-operator/Dockerfile \
             .
       - name: build (and publish) cepctl image
@@ -60,8 +60,8 @@ jobs:
         run: |
           docker buildx build \
             --platform linux/amd64,linux/arm64 \
-            --build-arg VERSION=dev \
+            --build-arg VERSION=latest \
             --push \
-            -t ${DOCKER_REPO}:dev \
+            -t ${DOCKER_REPO}:latest \
             -f dockerfiles/cepctl/Dockerfile \
             .
