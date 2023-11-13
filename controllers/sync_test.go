@@ -17,11 +17,11 @@ limitations under the License.
 package controllers
 
 import (
+	"github.com/labring/endpoints-operator/utils/metrics"
 	"reflect"
 	"testing"
 
 	"github.com/labring/endpoints-operator/apis/network/v1beta1"
-	"github.com/labring/endpoints-operator/metrics"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -61,6 +61,43 @@ func Test_clusterEndpointConvertEndpointSubset(t *testing.T) {
 								Protocol:         "TCP",
 								Port:             8080,
 								TargetPort:       31381,
+							},
+						},
+						PeriodSeconds: 0,
+					},
+				},
+				retry:       3,
+				metricsinfo: nil,
+			},
+			want:  nil,
+			want1: nil,
+		},
+		{
+			name: "endpoint",
+			args: args{
+				cep: &v1beta1.ClusterEndpoint{
+					TypeMeta: v1.TypeMeta{},
+					ObjectMeta: v1.ObjectMeta{
+						Name:      "",
+						Namespace: "",
+					},
+					Spec: v1beta1.ClusterEndpointSpec{
+						Ports: []v1beta1.ServicePort{
+							{
+								Hosts: []string{"172.31.13.241", "172.31.3.240", "172.31.4.233"},
+								Handler: v1beta1.Handler{
+									HTTPGet: &v1beta1.HTTPGetAction{
+										Path:   "/",
+										Scheme: "HTTP",
+									},
+								},
+								TimeoutSeconds:   1,
+								SuccessThreshold: 1,
+								FailureThreshold: 3,
+								Name:             "default",
+								Protocol:         "TCP",
+								Port:             8848,
+								TargetPort:       8848,
 							},
 						},
 						PeriodSeconds: 0,

@@ -14,7 +14,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@master
         with:
-          go-version: 1.16.x
+          go-version: 1.20.x
 
       - name: Prepare
         id: prepare
@@ -25,7 +25,7 @@ jobs:
         uses: goreleaser/goreleaser-action@v1
         with:
           version: latest
-          args: release --snapshot  --rm-dist --timeout=1h
+          args: build --snapshot  --rm-dist --timeout=1h
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           VERSION: latest

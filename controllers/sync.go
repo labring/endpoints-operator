@@ -18,14 +18,14 @@ package controllers
 
 import (
 	"context"
+	"github.com/labring/endpoints-operator/utils/metrics"
 	"strconv"
 	"sync"
 
-	"github.com/labring/endpoints-operator/metrics"
 	"k8s.io/klog"
 
 	"github.com/labring/endpoints-operator/apis/network/v1beta1"
-	libv1 "github.com/labring/endpoints-operator/library/api/core/v1"
+	libv1 "github.com/labring/operator-sdk/api/core/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -68,7 +68,7 @@ func (c *Reconciler) syncService(ctx context.Context, cep *v1beta1.ClusterEndpoi
 		serviceCondition.Reason = "ServiceSyncError"
 		serviceCondition.Message = err.Error()
 		c.updateCondition(cep, serviceCondition)
-		c.Logger.V(4).Info("error updating service", "name", cep.Name, "msg", err.Error())
+		c.logger.V(4).Info("error updating service", "name", cep.Name, "msg", err.Error())
 		return
 	}
 	if !isConditionTrue(cep, v1beta1.SyncServiceReady) {
@@ -111,7 +111,7 @@ func (c *Reconciler) syncEndpoint(ctx context.Context, cep *v1beta1.ClusterEndpo
 		endpointCondition.Reason = "EndpointSyncError"
 		endpointCondition.Message = err.Error()
 		c.updateCondition(cep, endpointCondition)
-		c.Logger.V(4).Info("error updating endpoint", "name", cep.Name, "msg", err.Error())
+		c.logger.V(4).Info("error updating endpoint", "name", cep.Name, "msg", err.Error())
 		return
 	}
 	if syncError != nil {
@@ -120,7 +120,7 @@ func (c *Reconciler) syncEndpoint(ctx context.Context, cep *v1beta1.ClusterEndpo
 		endpointCondition.Reason = "EndpointSyncPortError"
 		endpointCondition.Message = syncError.Error()
 		c.updateCondition(cep, endpointCondition)
-		c.Logger.V(4).Info("error healthy endpoint", "name", cep.Name, "msg", syncError.Error())
+		c.logger.V(4).Info("error healthy endpoint", "name", cep.Name, "msg", syncError.Error())
 		return
 	}
 	if !isConditionTrue(cep, v1beta1.SyncEndpointReady) {
@@ -140,7 +140,6 @@ func clusterEndpointConvertEndpointSubset(cep *v1beta1.ClusterEndpoint, retry in
 			wg.Add(1)
 			go func(port v1beta1.ServicePort, host string) {
 				defer wg.Done()
-				defer mx.Unlock()
 				if port.TimeoutSeconds == 0 {
 					port.TimeoutSeconds = 1
 				}
@@ -216,6 +215,7 @@ func clusterEndpointConvertEndpointSubset(cep *v1beta1.ClusterEndpoint, retry in
 				for w.doProbe() {
 				}
 				mx.Lock()
+				defer mx.Unlock()
 				err := w.err
 
 				var probe metrics.ProbeType

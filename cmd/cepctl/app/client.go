@@ -20,12 +20,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	client2 "github.com/labring/endpoints-operator/utils/client"
 	"os"
 
 	"github.com/labring/endpoints-operator/apis/network/v1beta1"
-	"github.com/labring/endpoints-operator/client"
 	"github.com/labring/endpoints-operator/cmd/cepctl/app/options"
-	"github.com/labring/endpoints-operator/library/version"
+	"github.com/labring/operator-sdk/version"
 	"github.com/spf13/cobra"
 	v1 "k8s.io/api/core/v1"
 	v1opts "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -81,7 +81,7 @@ func run(s *options.Options, ctx context.Context) error {
 		}
 		return nil
 	}
-	cli := client.NewKubernetesClient(client.NewKubernetesOptions(s.KubeConfig, s.Master))
+	cli := client2.NewKubernetesClient(client2.NewKubernetesOptions(s.KubeConfig, s.Master))
 	if cli == nil {
 		return errors.New("build kube client error")
 	}
@@ -145,7 +145,7 @@ func run(s *options.Options, ctx context.Context) error {
 			return nil
 		}
 	}
-	c := client.NewCep(cli.KubernetesDynamic())
+	c := client2.NewCep(cli.KubernetesDynamic())
 	return c.CreateCR(ctx, cep)
 }
 

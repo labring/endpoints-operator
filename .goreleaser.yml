@@ -9,15 +9,14 @@ builds:
       - CGO_ENABLED=0
     goos:
       - linux
-      - darwin
     goarch:
       - amd64
       - arm64
     main: ./cmd/endpoints-operator
     ldflags:
-      - -X github.com/labring/endpoints-operator/library/version.gitVersion={{.Version}}
-      - -X github.com/labring/endpoints-operator/library/version.gitCommit={{.ShortCommit}}
-      - -X github.com/labring/endpoints-operator/library/version.buildDate={{.Date}}
+      - -X github.com/labring/operator-sdk/version.gitVersion={{.Version}}
+      - -X github.com/labring/operator-sdk/version.gitCommit={{.ShortCommit}}
+      - -X github.com/labring/operator-sdk/version.buildDate={{.Date}}
       - -s -w
   - env:
       - CGO_ENABLED=0
@@ -31,9 +30,9 @@ builds:
       - arm64
     main: ./cmd/cepctl
     ldflags:
-      - -X github.com/labring/endpoints-operator/library/version.gitVersion={{.Version}}
-      - -X github.com/labring/endpoints-operator/library/version.gitCommit={{.ShortCommit}}
-      - -X github.com/labring/endpoints-operator/library/version.buildDate={{.Date}}
+      - -X github.com/labring/operator-sdk/version.gitVersion={{.Version}}
+      - -X github.com/labring/operator-sdk/version.gitCommit={{.ShortCommit}}
+      - -X github.com/labring/operator-sdk/version.buildDate={{.Date}}
       - -s -w
 release:
   prerelease: auto

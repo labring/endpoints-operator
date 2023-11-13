@@ -16,21 +16,23 @@ package app
 
 import (
 	"context"
+	"flag"
 	"fmt"
+	"github.com/labring/endpoints-operator/utils/metrics"
+	"github.com/labring/operator-sdk/controller"
 	"net/http"
 	"os"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sync"
 
 	"github.com/labring/endpoints-operator/cmd/endpoints-operator/app/options"
 	"github.com/labring/endpoints-operator/controllers"
-	"github.com/labring/endpoints-operator/metrics"
 	"k8s.io/component-base/term"
 
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	cliflag "k8s.io/component-base/cli/flag"
-	"k8s.io/klog/klogr"
 	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -104,7 +106,11 @@ func run(s *options.Options, ctx context.Context) error {
 	mgrOptions.HealthProbeBindAddress = ":8080"
 	mgrOptions.MetricsBindAddress = ":9090"
 	klog.V(0).Info("setting up manager")
-	ctrl.SetLogger(klogr.New())
+	opts := zap.Options{
+		Development: true,
+	}
+	opts.BindFlags(flag.CommandLine)
+	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 	// Use 8443 instead of 443 cause we need root permission to bind port 443
 	mgr, err := manager.New(ctrl.GetConfigOrDie(), mgrOptions)
 	if err != nil {
@@ -116,15 +122,17 @@ func run(s *options.Options, ctx context.Context) error {
 	controllers.Install(scheme)
 	clusterReconciler := &controllers.Reconciler{}
 	if s.MaxConcurrent > 0 {
-		clusterReconciler.WorkNum = s.MaxConcurrent
+		clusterReconciler.MaxConcurrent = s.MaxConcurrent
 	} else {
-		clusterReconciler.WorkNum = 1
+		clusterReconciler.MaxConcurrent = 1
 	}
 	if s.MaxRetry > 0 {
 		clusterReconciler.RetryCount = s.MaxRetry
 	} else {
 		clusterReconciler.RetryCount = 1
 	}
+
+	clusterReconciler.RateLimiter = controller.GetRateLimiter(s.RateLimiterOptions)
 
 	clusterReconciler.MetricsInfo = metricsInfo
 
@@ -135,13 +143,13 @@ func run(s *options.Options, ctx context.Context) error {
 	klog.V(0).Info("Starting the controllers.")
 
 	//healthz  Liveness
-	if err := mgr.AddHealthzCheck("check", func(req *http.Request) error {
+	if err = mgr.AddHealthzCheck("check", func(req *http.Request) error {
 		return nil
 	}); err != nil {
 		klog.Fatal(err, "problem running manager liveness Check")
 	}
 	//readyz   Readiness
-	if err := mgr.AddReadyzCheck("check", func(req *http.Request) error {
+	if err = mgr.AddReadyzCheck("check", func(req *http.Request) error {
 		return nil
 	}); err != nil {
 		klog.Fatal(err, "problem running manager readiness check")
@@ -149,7 +157,7 @@ func run(s *options.Options, ctx context.Context) error {
 
 	go func() {
 		klog.Info("starting manager")
-		if err := mgr.Start(ctx); err != nil {
+		if err = mgr.Start(ctx); err != nil {
 			klog.Fatalf("unable to run the manager: %v", err)
 			os.Exit(1)
 		}
