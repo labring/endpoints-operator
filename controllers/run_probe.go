@@ -27,13 +27,13 @@ import (
 	"strings"
 	"time"
 
-	libv1 "github.com/labring/endpoints-operator/library/api/core/v1"
-	"github.com/labring/endpoints-operator/library/probe"
-	execprobe "github.com/labring/endpoints-operator/library/probe/exec"
-	grpcprobe "github.com/labring/endpoints-operator/library/probe/grpc"
-	httpprobe "github.com/labring/endpoints-operator/library/probe/http"
-	tcpprobe "github.com/labring/endpoints-operator/library/probe/tcp"
-	udpprobe "github.com/labring/endpoints-operator/library/probe/udp"
+	libv1 "github.com/labring/operator-sdk/api/core/v1"
+	"github.com/labring/operator-sdk/probe"
+	execprobe "github.com/labring/operator-sdk/probe/exec"
+	grpcprobe "github.com/labring/operator-sdk/probe/grpc"
+	httpprobe "github.com/labring/operator-sdk/probe/http"
+	tcpprobe "github.com/labring/operator-sdk/probe/tcp"
+	udpprobe "github.com/labring/operator-sdk/probe/udp"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	urutime "k8s.io/apimachinery/pkg/util/runtime"
@@ -61,7 +61,7 @@ func (pb *prober) runProbeWithRetries(p *libv1.Probe, retries int) (probe.Result
 	return result, output, err
 }
 
-//nolint: errcheck
+// nolint: errcheck
 func (w *work) doProbe() (keepGoing bool) {
 	defer func() { recover() }() // Actually eat panics (HandleCrash takes care of logging)
 	defer urutime.HandleCrash(func(_ interface{}) { keepGoing = true })

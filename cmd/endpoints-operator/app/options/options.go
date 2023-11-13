@@ -21,6 +21,7 @@ import (
 
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
 
+	utilcontroller "github.com/labring/operator-sdk/controller"
 	"github.com/spf13/pflag"
 	"k8s.io/client-go/tools/leaderelection"
 	cliflag "k8s.io/component-base/cli/flag"
@@ -33,7 +34,7 @@ type Options struct {
 	LeaderElectionResourceLock string
 	MaxConcurrent              int
 	MaxRetry                   int
-	RateLimiterOptions         RateLimiterOptions
+	RateLimiterOptions         utilcontroller.RateLimiterOptions
 }
 
 func NewOptions() *Options {
@@ -54,7 +55,7 @@ func (s *Options) Flags() cliflag.NamedFlagSets {
 
 	fs := fss.FlagSet("leaderelection")
 	s.bindLeaderElectionFlags(s.LeaderElection, fs)
-
+	s.RateLimiterOptions.BindFlags(flag.CommandLine)
 	fs.BoolVar(&s.LeaderElect, "leader-elect", s.LeaderElect, ""+
 		"Whether to enable leader election. This field should be enabled when controller manager"+
 		"deployed with multiple replicas.")

@@ -19,16 +19,15 @@ package controllers
 import (
 	"context"
 	"errors"
+	"github.com/labring/endpoints-operator/utils/metrics"
+	"github.com/labring/operator-sdk/controller"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/ratelimiter"
 	"time"
 
-	"github.com/labring/endpoints-operator/metrics"
-
 	"github.com/go-logr/logr"
 	"github.com/labring/endpoints-operator/apis/network/v1beta1"
-	"github.com/labring/endpoints-operator/library/controller"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -38,7 +37,6 @@ import (
 	runtimecontroller "sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 const (
@@ -83,9 +81,7 @@ func (c *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	if c.Client == nil {
 		c.Client = mgr.GetClient()
 	}
-	if c.logger == nil {
-		c.logger = log.Log.WithName(controllerName)
-	}
+	c.logger = log.Log.WithName(controllerName)
 	if c.recorder == nil {
 		c.recorder = mgr.GetEventRecorderFor(controllerName)
 	}
@@ -94,12 +90,12 @@ func (c *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 	c.scheme = mgr.GetScheme()
 	c.logger.V(4).Info("init reconcile controller service")
-	owner := &handler.EnqueueRequestForOwner{OwnerType: &v1beta1.ClusterEndpoint{}, IsController: false}
+	owner := handler.EnqueueRequestForOwner(mgr.GetScheme(), mgr.GetRESTMapper(), &v1beta1.ClusterEndpoint{}, handler.OnlyControllerOwner())
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1beta1.ClusterEndpoint{}, builder.WithPredicates(
 			predicate.Or(predicate.GenerationChangedPredicate{}))).
-		Watches(&source.Kind{Type: &corev1.Service{}}, owner).
+		Watches(&corev1.Service{}, owner).
 		WithOptions(runtimecontroller.Options{
 			MaxConcurrentReconciles: c.MaxConcurrent,
 			RateLimiter:             c.RateLimiter,

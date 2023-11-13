@@ -15,7 +15,7 @@
 package client
 
 import (
-	"github.com/labring/endpoints-operator/library/convert"
+	"github.com/labring/operator-sdk/convert"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 )
