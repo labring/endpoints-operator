@@ -19,10 +19,10 @@ metadata:
 spec:
   clusterIP: None
   periodSeconds: 10
-  hosts:
-    - 192.168.64.24
   ports:
     - name: https
+      hosts:
+        - 192.168.64.24
       port: 6443
       protocol: TCP
       targetPort: 6443

@@ -69,8 +69,6 @@ metadata:
   name: wordpress
   namespace: default
 spec:
-  hosts:
-    
   periodSeconds: 10
   ports:
     - name: wp-https
