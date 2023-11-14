@@ -55,7 +55,6 @@ func (s *Options) Flags() cliflag.NamedFlagSets {
 
 	fs := fss.FlagSet("leaderelection")
 	s.bindLeaderElectionFlags(s.LeaderElection, fs)
-	s.RateLimiterOptions.BindFlags(flag.CommandLine)
 	fs.BoolVar(&s.LeaderElect, "leader-elect", s.LeaderElect, ""+
 		"Whether to enable leader election. This field should be enabled when controller manager"+
 		"deployed with multiple replicas.")
