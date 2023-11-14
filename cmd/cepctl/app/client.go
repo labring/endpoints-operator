@@ -22,6 +22,7 @@ import (
 	"fmt"
 	client2 "github.com/labring/endpoints-operator/utils/client"
 	"os"
+	"sort"
 
 	"github.com/labring/endpoints-operator/apis/network/v1beta1"
 	"github.com/labring/endpoints-operator/cmd/cepctl/app/options"
@@ -112,7 +113,7 @@ func run(s *options.Options, ctx context.Context) error {
 			for _, addr := range subset.Addresses {
 				ips = append(ips, addr.IP)
 			}
-
+			sort.Sort(sort.StringSlice(ips))
 			for _, port := range subset.Ports {
 				ports = append(ports, v1beta1.ServicePort{
 					Handler: v1beta1.Handler{
